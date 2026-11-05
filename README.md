@@ -21,6 +21,24 @@
   <img src="docs/screenshots/cameras.jpg" width="900" alt="Camera list with live previews">
 </p>
 
+> [!NOTE]
+> **Esta es una versión modificada de [Topo TV](https://github.com/abdulmominsakib/tapo-android-tv),
+> creada por [Abdul Momin Sakib](https://github.com/abdulmominsakib).** Todo el
+> mérito de la app original es suyo; este repositorio parte de su código (con
+> su historial de commits) y agrega cambios para usar el TV como monitor de
+> cámaras. A su vez, Topo TV se basa en [Topo](https://github.com/filirnd/topo)
+> de [filirnd](https://github.com/filirnd). Se distribuye bajo la misma
+> [licencia MIT](LICENSE).
+>
+> **Cambios de esta versión**
+> - Las grillas piden un stream de baja resolución, para que entren más
+>   decodificadores en la memoria del TV.
+> - La pantalla no se apaga ni entra en salvapantallas mientras hay video.
+> - Una cámara que dejó de responder vuelve a intentarlo sola cada minuto.
+> - Si el relay de Tapo se corta, el video ya no queda congelado: el
+>   reproductor reconecta solo, y una imagen que pasa 10 segundos sin
+>   cambiar también se reconecta.
+
 Topo TV brings your Tapo cameras to the living room TV. Sign in with your Tapo
 account and you get live previews of every camera, multi-camera grids, pan and
 tilt on the D-pad, and privacy mode in one press. Everything goes through the
@@ -278,6 +296,10 @@ Flutter UI.
 - Needs an internet connection and a Tapo account.
 
 ## Credits and licence
+
+This repository is a modified copy of
+[Topo TV](https://github.com/abdulmominsakib/tapo-android-tv) by
+[Abdul Momin Sakib](https://github.com/abdulmominsakib), who wrote the app.
 
 Topo TV is based on [Topo](https://github.com/filirnd/topo) by filirnd,
 including its Tapo cloud research, and is released under the
