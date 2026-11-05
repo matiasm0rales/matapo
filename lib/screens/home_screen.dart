@@ -115,9 +115,9 @@ class _HomeScreenState extends State<HomeScreen> {
             FocusTraversalGroup(
               child: Row(
                 children: [
-                  Image.asset('assets/topo.png', width: 40, height: 40, semanticLabel: 'Topo'),
+                  Image.asset('assets/topo.png', width: 40, height: 40, semanticLabel: 'Tapo'),
                   const SizedBox(width: TopoSpace.sm),
-                  const Text('Topo', style: TopoText.title),
+                  const Text('Tapo', style: TopoText.title),
                   const SizedBox(width: TopoSpace.x2),
                   for (final (tab, label, icon) in const [
                     (HomeTab.cameras, 'Cameras', Icons.videocam_rounded),

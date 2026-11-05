@@ -180,8 +180,8 @@ class AppState extends ChangeNotifier {
   /// `adb reverse tcp:8099 tcp:8099`.
   static const _demoStream = String.fromEnvironment('TOPO_DEMO_STREAM');
 
-  String streamUrl(Camera camera) =>
-      demo && _demoStream.isNotEmpty ? '$_demoStream?cam=${Uri.encodeComponent(camera.deviceId)}' : relay.urlFor(camera.deviceId);
+  String streamUrl(Camera camera, {StreamQuality quality = StreamQuality.hd}) =>
+      demo && _demoStream.isNotEmpty ? '$_demoStream?cam=${Uri.encodeComponent(camera.deviceId)}' : relay.urlFor(camera.deviceId, quality: quality);
 
   // ---------------------------------------------------------------- Auth --
 

@@ -67,7 +67,7 @@ class _TopoTvAppState extends State<TopoTvApp> {
     return AppScope(
       app: widget.app,
       child: MaterialApp(
-        title: 'Topo TV',
+        title: 'Tapo',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
         navigatorKey: navigatorKey,
@@ -116,7 +116,7 @@ class _Splash extends StatelessWidget {
           children: [
             Image.asset('assets/topo.png', width: 120, height: 120),
             const SizedBox(height: 20),
-            const Text('Topo', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: TopoColors.onSurface)),
+            const Text('Tapo', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: TopoColors.onSurface)),
             const SizedBox(height: 24),
             const SizedBox(
               width: 28,

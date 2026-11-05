@@ -98,9 +98,9 @@ class SettingsPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/topo.png', width: 56, height: 56, semanticLabel: 'Topo'),
+                Image.asset('assets/topo.png', width: 56, height: 56, semanticLabel: 'Tapo'),
                 const SizedBox(height: TopoSpace.md),
-                const Text('Topo TV 1.2.0', style: TopoText.label),
+                const Text('Tapo 1.2.0', style: TopoText.label),
                 const SizedBox(height: TopoSpace.xs),
                 const Text(
                   'Android TV port of github.com/filirnd/topo. MIT licence. Not affiliated with TP-Link.',

@@ -48,6 +48,37 @@ class TapoException implements Exception {
   String toString() => message;
 }
 
+/// Which video a camera sends through the cloud relay. Small tiles use [low]
+/// so several decoders fit in a TV's memory; full screen uses [hd].
+enum StreamQuality {
+  hd('HD', 0),
+  low(
+    String.fromEnvironment('TOPO_LOW_RESOLUTION', defaultValue: 'VGA'),
+    int.fromEnvironment('TOPO_LOW_STREAM_TYPE'),
+  );
+
+  const StreamQuality(this.resolution, this.streamType);
+  final String resolution;
+  final int streamType;
+}
+
+/// Runs [attempt] at [quality]. The relay's quality options are undocumented,
+/// so if it rejects a low stream, ask for HD rather than showing an error.
+/// Offline cameras, expired sessions and network errors would fail the same
+/// way in HD, so those are not retried.
+Future<T> withQualityFallback<T>(
+  StreamQuality quality,
+  Future<T> Function(StreamQuality quality) attempt,
+) async {
+  try {
+    return await attempt(quality);
+  } on TapoException catch (e) {
+    const offline = {-40401, -40406};
+    if (quality == StreamQuality.hd || e.code == null || e.isAuthError || offline.contains(e.code)) rethrow;
+    return attempt(StreamQuality.hd);
+  }
+}
+
 String randomUuid() {
   final rng = Random.secure();
   final b = List<int>.generate(16, (_) => rng.nextInt(256));
@@ -539,7 +570,11 @@ class TapoCloud {
 
   // --------------------------------------------------------------- Relay --
 
-  Future<RelayInfo> requestRelay(String baseUrl, Map<String, dynamic> device) async {
+  Future<RelayInfo> requestRelay(
+    String baseUrl,
+    Map<String, dynamic> device, {
+    StreamQuality quality = StreamQuality.hd,
+  }) async {
     final deviceId = '${device['deviceId'] ?? ''}';
     if (deviceId.isEmpty) throw TapoException('Camera has no deviceId');
     await _ensureCipc(baseUrl);
@@ -551,9 +586,9 @@ class TapoCloud {
       'deviceType': device['deviceType'] ?? 'SMART.IPCAMERA',
       'playerId': playerId,
       'rootCaVer': '1',
-      'streamType': 0,
+      'streamType': quality.streamType,
       'preConnection': 0,
-      'resolution': 'HD',
+      'resolution': quality.resolution,
     }, playerId);
     final info = resultOf(response);
     final code = errorCode(response);
@@ -591,8 +626,15 @@ class TapoCloud {
   }
 
   /// Opens the relay and yields the raw MPEG-TS video bytes.
-  Stream<Uint8List> openVideoStream(String baseUrl, Map<String, dynamic> device) async* {
-    final relay = await requestRelay(baseUrl, device);
+  Stream<Uint8List> openVideoStream(
+    String baseUrl,
+    Map<String, dynamic> device, {
+    StreamQuality quality = StreamQuality.hd,
+  }) async* {
+    final relay = await withQualityFallback(
+      quality,
+      (q) => requestRelay(baseUrl, device, quality: q),
+    );
     final headers = <String, String>{
       'Host': relay.host,
       'User-Agent': 'Client=$appName Android $appVersion/1.3',

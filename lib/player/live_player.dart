@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show PlatformViewHitTestBehavior;
 import 'package:flutter/services.dart';
 
+import '../api/tapo_cloud.dart' show StreamQuality;
 import '../state/app_state.dart';
 import '../ui/theme.dart';
 import '../ui/tv.dart' show KeyCap;
@@ -77,7 +78,8 @@ class LiveVideo extends StatefulWidget {
   final AppState app;
   final Camera camera;
 
-  /// Compact = grid thumbnail: smaller texts, no long error explanations.
+  /// Compact = grid thumbnail: low-resolution stream, smaller texts, no long
+  /// error explanations.
   final bool compact;
 
   /// Wait for a [StreamQueue] slot before connecting (lists and grids).
@@ -106,8 +108,13 @@ class LiveVideoState extends State<LiveVideo> {
   bool _waiting = false;
 
   /// A camera that shows no picture this long after its first connection
-  /// attempt (retries included) is given up on until the user retries.
+  /// attempt (retries included) is given up on for [autoRetryAfter], so it
+  /// stops using a stream slot but still comes back on its own.
   static const giveUpAfter = Duration(seconds: 25);
+
+  /// Monitors run unattended, so a camera or connection that comes back
+  /// must recover without anyone pressing Retry.
+  static const autoRetryAfter = Duration(seconds: 60);
   DateTime? _firstAttemptAt;
 
   LiveState get state => _state;
@@ -209,13 +216,17 @@ class LiveVideoState extends State<LiveVideo> {
     });
   }
 
-  /// Stops trying; the overlay offers a Retry button.
+  /// Pauses trying; the overlay offers a Retry button, and it tries again by
+  /// itself after [autoRetryAfter].
   void _giveUp(String message) {
     _stallTimer?.cancel();
     _retryTimer?.cancel();
     _releaseTicket();
     _releaseTexture();
     _setState(LiveState.failed, error: message);
+    _retryTimer = Timer(autoRetryAfter, () {
+      if (!_disposed) restart();
+    });
   }
 
   void _releaseTexture() {
@@ -258,7 +269,10 @@ class LiveVideoState extends State<LiveVideo> {
                 aspectRatio: _aspect,
                 child: _NativeVideo(
                   key: ValueKey(session),
-                  url: widget.app.streamUrl(widget.camera),
+                  url: widget.app.streamUrl(
+                    widget.camera,
+                    quality: widget.compact ? StreamQuality.low : StreamQuality.hd,
+                  ),
                   snapshotPath: Snapshots.instance.pathFor(widget.camera.deviceId),
                   onEvent: _onEvent,
                 ),

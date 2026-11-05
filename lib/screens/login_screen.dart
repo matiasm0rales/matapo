@@ -39,12 +39,12 @@ class _Brand extends StatelessWidget {
         children: [
           Row(
             children: [
-              Image.asset('assets/topo.png', width: 64, height: 64, semanticLabel: 'Topo'),
+              Image.asset('assets/topo.png', width: 64, height: 64, semanticLabel: 'Tapo'),
               const SizedBox(width: TopoSpace.md),
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Topo', style: TopoText.display),
+                  Text('Tapo', style: TopoText.display),
                   Text('for Android TV', style: TextStyle(fontSize: 16, color: TopoColors.primaryAction, fontWeight: FontWeight.w500)),
                 ],
               ),

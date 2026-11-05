@@ -6,8 +6,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.util.Log
 import android.view.TextureView
 import android.view.View
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
@@ -19,6 +22,9 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
+import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory
 import io.flutter.plugin.common.MethodChannel
@@ -64,6 +70,9 @@ private class LiveVideoView(
         isFocusable = false
         isFocusableInTouchMode = false
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        // The TV is used as a camera monitor: no screensaver or sleep while
+        // any video is on screen. Android clears this when the view goes away.
+        keepScreenOn = true
     }
     private val player: ExoPlayer
     private var released = false
@@ -94,6 +103,36 @@ private class LiveVideoView(
         }
     }
     private var speedUp = false
+
+    /** When the last frame went to the screen; written on the playback thread. */
+    @Volatile private var lastFrameAtMs = 0L
+    private var failed = false
+
+    /** Reports at most one error per session; Flutter then replaces this view. */
+    private fun fail(message: String?) {
+        if (failed || released) return
+        failed = true
+        emit(mapOf("state" to "error", "message" to message))
+    }
+
+    /**
+     * Safety net for unattended monitors: once video is playing, a picture
+     * that hasn't changed for [STALL_AFTER_MS] is reported as an error, so
+     * the Flutter side reconnects with a fresh player instead of showing a
+     * frozen frame forever.
+     */
+    private val stallWatch: Runnable = object : Runnable {
+        override fun run() {
+            if (released || failed) return
+            val last = lastFrameAtMs
+            if (last != 0L && SystemClock.elapsedRealtime() - last > STALL_AFTER_MS) {
+                Log.w("TopoPlayer", "no new frame for ${STALL_AFTER_MS / 1000} s, reconnecting")
+                fail("Video stopped")
+                return
+            }
+            handler.postDelayed(this, 1000)
+        }
+    }
 
     /**
      * The relay is a live stream exposed as an unbounded progressive file,
@@ -131,6 +170,7 @@ private class LiveVideoView(
             .setConnectTimeoutMs(10_000)
             .setReadTimeoutMs(30_000)
         val source = ProgressiveMediaSource.Factory(dataSource, extractors)
+            .setLoadErrorHandlingPolicy(NoRetry)
             .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
 
         player = ExoPlayer.Builder(context, renderersFactory(context))
@@ -138,18 +178,22 @@ private class LiveVideoView(
             .build()
         player.volume = 0f
         player.setVideoTextureView(textureView)
+        player.setVideoFrameMetadataListener(
+            VideoFrameMetadataListener { _, _, _, _ -> lastFrameAtMs = SystemClock.elapsedRealtime() }
+        )
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
                     Player.STATE_BUFFERING -> emit(mapOf("state" to "buffering"))
                     Player.STATE_READY -> emit(mapOf("state" to "playing"))
-                    Player.STATE_ENDED -> emit(mapOf("state" to "error", "message" to "Stream ended"))
+                    Player.STATE_ENDED -> fail("Stream ended")
                     else -> {}
                 }
             }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width <= 0 || videoSize.height <= 0) return
+                Log.i("TopoPlayer", "video size ${videoSize.width}x${videoSize.height}")
                 emit(
                     mapOf(
                         "state" to "size",
@@ -163,10 +207,13 @@ private class LiveVideoView(
                 emit(mapOf("state" to "firstFrame"))
                 handler.removeCallbacks(snapshotTask)
                 handler.postDelayed(snapshotTask, 1500)
+                lastFrameAtMs = SystemClock.elapsedRealtime()
+                handler.removeCallbacks(stallWatch)
+                handler.postDelayed(stallWatch, 1000)
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                emit(mapOf("state" to "error", "message" to (error.cause?.message ?: error.message)))
+                fail(error.cause?.message ?: error.message)
             }
         })
         player.setMediaSource(source)
@@ -178,6 +225,23 @@ private class LiveVideoView(
     override fun getView(): View = textureView
 
     companion object {
+        private const val STALL_AFTER_MS = 10_000L
+
+        /**
+         * Every load error is fatal, so it reaches onPlayerError and the
+         * Flutter side reconnects with a fresh player.
+         *
+         * ExoPlayer's own retry is wrong for this live relay: when the relay
+         * drops, it reopens the URL in the same player, which gets a new relay
+         * session but keeps the old stream's timestamp offset. The new frames
+         * then never line up with the playback position and the picture
+         * freezes without any error being reported.
+         */
+        private val NoRetry = object : DefaultLoadErrorHandlingPolicy() {
+            override fun getRetryDelayMsFor(loadErrorInfo: LoadErrorHandlingPolicy.LoadErrorInfo): Long =
+                C.TIME_UNSET
+        }
+
         /**
          * Emulators expose a "goldfish" hardware decoder that stalls after a
          * dozen frames on live H.264, so there prefer the software decoder.
@@ -202,6 +266,7 @@ private class LiveVideoView(
         released = true
         handler.removeCallbacks(latencyWatch)
         handler.removeCallbacks(snapshotTask)
+        handler.removeCallbacks(stallWatch)
         player.release()
     }
 }

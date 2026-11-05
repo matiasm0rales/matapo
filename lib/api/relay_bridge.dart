@@ -28,10 +28,10 @@ class RelayBridge {
     _server = server;
   }
 
-  String urlFor(String deviceId) {
+  String urlFor(String deviceId, {StreamQuality quality = StreamQuality.hd}) {
     final port = _server?.port ?? 0;
     return 'http://127.0.0.1:$port/camera/${Uri.encodeComponent(deviceId)}.ts'
-        '?k=$_key&n=${DateTime.now().microsecondsSinceEpoch}';
+        '?k=$_key&q=${quality.name}&n=${DateTime.now().microsecondsSinceEpoch}';
   }
 
   Future<void> _handle(HttpRequest request) async {
@@ -55,7 +55,8 @@ class RelayBridge {
     final (client, baseUrl, device) = target;
     // Wait for the first video bytes before answering, so a relay failure
     // becomes an HTTP error with a readable reason instead of an empty file.
-    final video = StreamIterator(client.openVideoStream(baseUrl, device));
+    final quality = request.uri.queryParameters['q'] == StreamQuality.low.name ? StreamQuality.low : StreamQuality.hd;
+    final video = StreamIterator(client.openVideoStream(baseUrl, device, quality: quality));
     try {
       if (!await video.moveNext()) throw TapoException('Camera sent no video');
     } catch (e) {
