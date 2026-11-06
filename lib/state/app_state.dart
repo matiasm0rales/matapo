@@ -4,12 +4,17 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/relay_bridge.dart';
+import '../api/rtsp_probe.dart';
 import '../api/tapo_cloud.dart';
 import '../player/stream_queue.dart';
 import 'grids.dart';
+import 'local_cameras.dart';
+
+export 'local_cameras.dart' show LocalCamera, StreamSource;
 
 enum AuthStage { starting, signedOut, mfa, signedIn }
 
@@ -61,6 +66,21 @@ class AppState extends ChangeNotifier {
   static const _kGrids = 'grids';
   static const _kActiveGrid = 'active_grid';
   static const _kFavoriteGrid = 'favorite_grid';
+  static const _kLocalCameras = 'local_cameras';
+  static const _kLocalPasswordPrefix = 'local_pw_';
+
+  /// Camera passwords: Keychain on macOS, encrypted storage on Android.
+  /// On macOS the legacy keychain is used, which needs no Keychain Sharing
+  /// entitlement (that one requires a provisioning profile, and the app is
+  /// signed ad hoc).
+  static const _secure = FlutterSecureStorage(mOptions: MacOsOptions(usesDataProtectionKeychain: false));
+
+  /// After a local session fails, the camera uses only the cloud this long.
+  static const localBlockFor = Duration(minutes: 2);
+
+  /// A successful probe is trusted this long, so a grid doesn't probe the
+  /// same camera again for every tile and reconnect.
+  static const probeCacheFor = Duration(seconds: 60);
 
   late SharedPreferences _prefs;
   late SecurityContext _context;
@@ -90,6 +110,22 @@ class AppState extends ChangeNotifier {
   /// Grid pinned to the top of the home page, if any.
   String? favoriteGridId;
 
+  /// RTSP settings per device id (the passwords are kept apart).
+  Map<String, LocalCamera> localCameras = {};
+  final Map<String, String> _localPasswords = {};
+  final Map<String, DateTime> _localBlockedUntil = {};
+  final Map<String, DateTime> _probeOkUntil = {};
+  final Map<String, Future<RtspProbeResult>> _probing = {};
+  final Map<String, int> _localVersions = {};
+
+  /// Changes whenever a camera's local settings are saved or removed, so
+  /// open streams can reconnect with the new settings.
+  int localVersion(String deviceId) => _localVersions[deviceId] ?? 0;
+
+  /// How streams check a camera on the home network; tests replace it.
+  @visibleForTesting
+  RtspProber probe = probeRtsp;
+
   TapoCloud? get client => _client;
 
   Future<void> init() async {
@@ -102,6 +138,7 @@ class AppState extends ChangeNotifier {
       guideSeen = _prefs.getBool(_kGuideSeen) ?? false;
       accountHint = _prefs.getString(_kAccount) ?? '';
       _loadGrids();
+      await _loadLocalCameras();
       await Snapshots.instance.init();
       await relay.start();
       _bootstrapped = true;
@@ -182,6 +219,119 @@ class AppState extends ChangeNotifier {
 
   String streamUrl(Camera camera, {StreamQuality quality = StreamQuality.hd}) =>
       demo && _demoStream.isNotEmpty ? '$_demoStream?cam=${Uri.encodeComponent(camera.deviceId)}' : relay.urlFor(camera.deviceId, quality: quality);
+
+  // ------------------------------------------------------- Local (RTSP) --
+
+  Future<void> _loadLocalCameras() async {
+    try {
+      final raw = jsonDecode(_prefs.getString(_kLocalCameras) ?? '{}') as Map;
+      localCameras = {
+        for (final e in raw.entries) '${e.key}': LocalCamera.fromJson(Map<String, dynamic>.from(e.value as Map)),
+      };
+    } catch (_) {
+      localCameras = {};
+    }
+    for (final id in localCameras.keys) {
+      try {
+        final pw = await _secure.read(key: '$_kLocalPasswordPrefix$id');
+        if (pw != null) _localPasswords[id] = pw;
+      } catch (e) {
+        debugPrint('Matapo: could not read a camera password: $e');
+      }
+    }
+  }
+
+  Future<void> _saveLocalCameras() => _prefs.setString(
+        _kLocalCameras,
+        jsonEncode({for (final e in localCameras.entries) e.key: e.value.toJson()}),
+      );
+
+  LocalCamera? localCameraFor(Camera camera) => localCameras[camera.deviceId];
+
+  /// True when the camera has local settings and a stored password.
+  bool hasLocal(Camera camera) =>
+      localCameras.containsKey(camera.deviceId) && _localPasswords.containsKey(camera.deviceId);
+
+  /// Saves (or with a null [cam], removes) a camera's local settings. A null
+  /// [password] with a non-null [cam] keeps the stored password.
+  Future<void> setLocalCamera(String deviceId, LocalCamera? cam, String? password) async {
+    _localVersions[deviceId] = localVersion(deviceId) + 1;
+    _localBlockedUntil.remove(deviceId);
+    _probeOkUntil.remove(deviceId);
+    final key = '$_kLocalPasswordPrefix$deviceId';
+    if (cam == null) {
+      localCameras.remove(deviceId);
+      _localPasswords.remove(deviceId);
+      await _saveLocalCameras();
+      try {
+        await _secure.delete(key: key);
+      } catch (_) {}
+    } else {
+      localCameras[deviceId] = cam;
+      await _saveLocalCameras();
+      if (password != null) {
+        _localPasswords[deviceId] = password;
+        await _secure.write(key: key, value: password);
+      }
+    }
+    notifyListeners();
+  }
+
+  /// "Probar": checks [cam] with [password], or the stored password when
+  /// [password] is null or empty.
+  Future<RtspProbeResult> testLocal(String deviceId, LocalCamera cam, String? password) {
+    final pw = (password == null || password.isEmpty) ? _localPasswords[deviceId] : password;
+    if (pw == null) return Future.value(const RtspProbeResult(RtspProbeStatus.badCredentials));
+    return probe(cam, pw, timeout: const Duration(seconds: 4));
+  }
+
+  bool isLocalBlocked(String deviceId) {
+    final until = _localBlockedUntil[deviceId];
+    return until != null && DateTime.now().isBefore(until);
+  }
+
+  /// A local session failed: use the cloud for [localBlockFor].
+  void blockLocal(String deviceId) {
+    _localBlockedUntil[deviceId] = DateTime.now().add(localBlockFor);
+    _probeOkUntil.remove(deviceId);
+  }
+
+  @visibleForTesting
+  void debugSetLocal(String deviceId, LocalCamera cam, String password) {
+    localCameras[deviceId] = cam;
+    _localPasswords[deviceId] = password;
+  }
+
+  /// Where the next stream for [camera] should come from: the camera itself
+  /// over RTSP when it is set up, not blocked and answers quickly; otherwise
+  /// the cloud relay (or the demo stream in demo mode).
+  Future<(StreamSource, String)> pickSource(Camera camera, StreamQuality quality) async {
+    final id = camera.deviceId;
+    final cam = localCameras[id];
+    final password = _localPasswords[id];
+    if (cam != null && password != null && !isLocalBlocked(id)) {
+      final okUntil = _probeOkUntil[id];
+      var ok = okUntil != null && DateTime.now().isBefore(okUntil);
+      if (!ok) {
+        final result = await (_probing[id] ??= probe(cam, password).whenComplete(() {
+          _probing.remove(id);
+        }));
+        ok = result.ok;
+        if (ok) {
+          _probeOkUntil[id] = DateTime.now().add(probeCacheFor);
+        } else {
+          // Away from home: don't make every reconnect wait for the probe.
+          debugPrint('Matapo: local video for $id unavailable ($result), using the cloud');
+          blockLocal(id);
+        }
+      }
+      // The settings may have changed while probing.
+      if (ok && localCameras[id] == cam && _localPasswords[id] == password) {
+        return (StreamSource.local, rtspUrl(cam, password, quality));
+      }
+    }
+    return (StreamSource.cloud, streamUrl(camera, quality: quality));
+  }
 
   // ---------------------------------------------------------------- Auth --
 
@@ -283,6 +433,17 @@ class AppState extends ChangeNotifier {
     await _prefs.remove(_kSession);
     // Forget the terminal identity too so the next sign-in asks for MFA.
     await _prefs.remove(_kTerminal);
+    // Camera accounts belong to this sign-in too.
+    for (final id in {...localCameras.keys, ..._localPasswords.keys}) {
+      try {
+        await _secure.delete(key: '$_kLocalPasswordPrefix$id');
+      } catch (_) {}
+    }
+    localCameras = {};
+    _localPasswords.clear();
+    _localBlockedUntil.clear();
+    _probeOkUntil.clear();
+    await _prefs.remove(_kLocalCameras);
     stage = AuthStage.signedOut;
     notifyListeners();
   }

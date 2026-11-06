@@ -21,6 +21,8 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.rtsp.RtspMediaSource
+import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
@@ -104,6 +106,9 @@ private class LiveVideoView(
     }
     private var speedUp = false
 
+    /** The camera's own RTSP stream on the home network, not the cloud relay. */
+    private val isRtsp = url.startsWith("rtsp://", ignoreCase = true)
+
     /** When the last frame went to the screen; written on the playback thread. */
     @Volatile private var lastFrameAtMs = 0L
     private var failed = false
@@ -127,7 +132,7 @@ private class LiveVideoView(
             val last = lastFrameAtMs
             if (last != 0L && SystemClock.elapsedRealtime() - last > STALL_AFTER_MS) {
                 Log.w("MatapoPlayer", "no new frame for ${STALL_AFTER_MS / 1000} s, reconnecting")
-                fail("Video stopped")
+                fail("El video se detuvo")
                 return
             }
             handler.postDelayed(this, 1000)
@@ -161,17 +166,27 @@ private class LiveVideoView(
             .setBufferDurationsMs(500, 4000, 250, 500)
             .setPrioritizeTimeOverSizeThresholds(true)
             .build()
-        val extractors = DefaultExtractorsFactory()
-            .setTsExtractorFlags(
-                DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES or
-                    DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS
-            )
-        val dataSource = DefaultHttpDataSource.Factory()
-            .setConnectTimeoutMs(10_000)
-            .setReadTimeoutMs(30_000)
-        val source = ProgressiveMediaSource.Factory(dataSource, extractors)
-            .setLoadErrorHandlingPolicy(NoRetry)
-            .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
+        val source: MediaSource = if (isRtsp) {
+            // Credentials come from the URL's userinfo (Basic or Digest).
+            // RTP over the RTSP TCP connection: steadier on Wi-Fi than UDP.
+            RtspMediaSource.Factory()
+                .setForceUseRtpTcp(true)
+                .setTimeoutMs(8_000)
+                .setUserAgent("Matapo")
+                .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
+        } else {
+            val extractors = DefaultExtractorsFactory()
+                .setTsExtractorFlags(
+                    DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES or
+                        DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS
+                )
+            val dataSource = DefaultHttpDataSource.Factory()
+                .setConnectTimeoutMs(10_000)
+                .setReadTimeoutMs(30_000)
+            ProgressiveMediaSource.Factory(dataSource, extractors)
+                .setLoadErrorHandlingPolicy(NoRetry)
+                .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
+        }
 
         player = ExoPlayer.Builder(context, renderersFactory(context))
             .setLoadControl(loadControl)
@@ -186,7 +201,7 @@ private class LiveVideoView(
                 when (state) {
                     Player.STATE_BUFFERING -> emit(mapOf("state" to "buffering"))
                     Player.STATE_READY -> emit(mapOf("state" to "playing"))
-                    Player.STATE_ENDED -> fail("Stream ended")
+                    Player.STATE_ENDED -> fail("La transmisión terminó")
                     else -> {}
                 }
             }
@@ -219,7 +234,9 @@ private class LiveVideoView(
         player.setMediaSource(source)
         player.playWhenReady = true
         player.prepare()
-        handler.postDelayed(latencyWatch, 1000)
+        // RTSP has a real live edge and doesn't build up delay; only the
+        // relay's endless progressive file needs the speed-up.
+        if (!isRtsp) handler.postDelayed(latencyWatch, 1000)
     }
 
     override fun getView(): View = textureView

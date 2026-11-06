@@ -36,6 +36,7 @@ class _DesktopLiveScreenState extends State<DesktopLiveScreen> {
   final _focus = FocusNode(debugLabel: 'desktop-live');
   int _reconnects = 0;
   LiveState _liveState = LiveState.connecting;
+  StreamSource? _source;
 
   bool _controls = true;
   bool _overControls = false;
@@ -99,6 +100,7 @@ class _DesktopLiveScreenState extends State<DesktopLiveScreen> {
     setState(() {
       _index = index;
       _liveState = LiveState.connecting;
+      _source = null;
       _pendingMove = null;
     });
     _refreshState();
@@ -236,6 +238,9 @@ class _DesktopLiveScreenState extends State<DesktopLiveScreen> {
                     onStateChanged: (s) {
                       if (mounted) setState(() => _liveState = s);
                     },
+                    onSourceChanged: (s) {
+                      if (mounted) setState(() => _source = s);
+                    },
                   ),
                 // Top bar.
                 Positioned(
@@ -268,7 +273,12 @@ class _DesktopLiveScreenState extends State<DesktopLiveScreen> {
                               child: const Text('EN VIVO',
                                   style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 6),
+                            if (_source != null) ...[
+                              SourceChip(source: _source!, onMedia: true),
+                              const SizedBox(width: 10),
+                            ] else
+                              const SizedBox(width: 4),
                           ],
                           Flexible(
                             child: Text(

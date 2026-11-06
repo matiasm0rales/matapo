@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart' show AppScope;
+import '../ui/theme.dart';
+import 'desktop_local_camera.dart';
 import 'desktop_theme.dart';
 
 const appVersionLabel = '1.2.0';
@@ -57,6 +59,35 @@ class SettingsSection extends StatelessWidget {
                       onSelectionChanged: (s) => app.setPtzStep(s.first),
                     ),
                   ),
+                ]),
+                group('Conexión local', [
+                  ListTile(
+                    leading: const Icon(Icons.lan_outlined),
+                    title: const Text('Video directo desde la cámara'),
+                    subtitle: const Text(
+                      'En casa, el video llega por la red local, sin pasar por la nube de Tapo. '
+                      'Fuera de casa se usa la nube sola. El movimiento y el modo privacidad siguen por la nube.',
+                    ),
+                  ),
+                  for (final camera in app.cameras) ...[
+                    const Divider(),
+                    ListTile(
+                      leading: Icon(
+                        app.hasLocal(camera) ? Icons.home_rounded : Icons.cloud_outlined,
+                        color: app.hasLocal(camera) ? MatapoColors.success : DesktopColors.secondary,
+                      ),
+                      title: Text(camera.name),
+                      subtitle: Text(
+                        app.hasLocal(camera)
+                            ? 'Local configurada · ${app.localCameraFor(camera)!.authority}'
+                            : 'Solo nube',
+                      ),
+                      trailing: OutlinedButton(
+                        onPressed: () => showLocalCameraDialog(context, camera),
+                        child: const Text('Configurar…'),
+                      ),
+                    ),
+                  ],
                 ]),
                 group('Cuenta', [
                   ListTile(

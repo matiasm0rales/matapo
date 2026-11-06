@@ -22,6 +22,7 @@ class LiveVideo extends StatefulWidget {
     this.compact = false,
     this.queued = true,
     this.onStateChanged,
+    this.onSourceChanged,
   });
 
   final AppState app;
@@ -35,6 +36,9 @@ class LiveVideo extends StatefulWidget {
   /// The full-screen live view starts at once.
   final bool queued;
   final ValueChanged<LiveState>? onStateChanged;
+
+  /// Called when a stream session picks local (RTSP) or cloud video.
+  final ValueChanged<StreamSource>? onSourceChanged;
 
   @override
   State<LiveVideo> createState() => LiveVideoState();
@@ -53,6 +57,17 @@ class LiveVideoState extends State<LiveVideo> {
   bool _disposed = false;
   StreamTicket? _ticket;
 
+  /// Source and URL of the current session, chosen in [_start].
+  StreamSource? _source;
+  String? _url;
+
+  /// Increments on every [_start]; an older start that is still waiting
+  /// (queue or probe) stops when it sees a newer one.
+  int _attempt = 0;
+
+  /// [AppState.localVersion] when the current session started.
+  int _localVersion = 0;
+
   /// True while waiting for this stream's turn in the [StreamQueue].
   bool _waiting = false;
 
@@ -69,6 +84,9 @@ class LiveVideoState extends State<LiveVideo> {
   LiveState get state => _state;
   bool get failed => _state == LiveState.failed;
 
+  /// Where the current (or last) session's video comes from.
+  StreamSource? get source => _source;
+
   /// Manual retry: skips the queue, since the user asked for this camera.
   void retry() => restart(skipQueue: true);
 
@@ -82,7 +100,11 @@ class LiveVideoState extends State<LiveVideo> {
   @override
   void didUpdateWidget(LiveVideo oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.camera.deviceId != widget.camera.deviceId) restart(resetFailures: true);
+    if (oldWidget.camera.deviceId != widget.camera.deviceId ||
+        widget.app.localVersion(widget.camera.deviceId) != _localVersion) {
+      // Another camera, or its local settings were just changed.
+      restart(resetFailures: true);
+    }
   }
 
   void _setState(LiveState s, {String? error}) {
@@ -95,6 +117,8 @@ class LiveVideoState extends State<LiveVideo> {
   }
 
   Future<void> _start({bool skipQueue = false}) async {
+    final attempt = ++_attempt;
+    _localVersion = widget.app.localVersion(widget.camera.deviceId);
     _stallTimer?.cancel();
     _releaseTicket();
     if (widget.queued && !skipQueue) {
@@ -103,10 +127,12 @@ class LiveVideoState extends State<LiveVideo> {
       if (!_waiting) setState(() => _waiting = true);
       await ticket.ready;
       // Superseded by a restart, or the view went away while waiting.
-      if (_disposed || !identical(_ticket, ticket)) {
+      if (_disposed || !identical(_ticket, ticket) || attempt != _attempt) {
         ticket.release();
         return;
       }
+      setState(() => _waiting = false);
+    } else if (_waiting) {
       setState(() => _waiting = false);
     }
     if (_disposed) return;
@@ -115,7 +141,19 @@ class LiveVideoState extends State<LiveVideo> {
     _stallTimer = Timer(left.isNegative ? Duration.zero : left, () {
       if (_state != LiveState.playing) _giveUp('La cámara no respondió a tiempo');
     });
-    setState(() => _session = ++_sessions);
+    // Local video when the camera answers on the home network, else cloud.
+    final (source, url) = await widget.app.pickSource(
+      widget.camera,
+      widget.compact ? StreamQuality.low : StreamQuality.hd,
+    );
+    if (_disposed || attempt != _attempt) return;
+    final changed = source != _source;
+    setState(() {
+      _source = source;
+      _url = url;
+      _session = ++_sessions;
+    });
+    if (changed) widget.onSourceChanged?.call(source);
   }
 
   void _releaseTicket() {
@@ -138,9 +176,29 @@ class LiveVideoState extends State<LiveVideo> {
       case 'snapshot':
         Snapshots.instance.updated(widget.camera.deviceId);
       case 'error':
+        if (_source == StreamSource.local) {
+          _fallBackToCloud('${event['message'] ?? ''}');
+          return;
+        }
         final relayError = widget.app.relay.lastErrors[widget.camera.deviceId];
         _onFailure(relayError ?? '${event['message'] ?? 'Se cortó la transmisión'}');
     }
+  }
+
+  /// A local (RTSP) session failed, e.g. away from home or the camera's
+  /// stream limit: switch to the cloud at once. It doesn't count as a
+  /// failure, so the camera isn't reported as not responding because of
+  /// the home network.
+  void _fallBackToCloud(String reason) {
+    debugPrint('Matapo: local video for ${widget.camera.deviceId} failed ($reason), using the cloud');
+    widget.app.blockLocal(widget.camera.deviceId);
+    _stallTimer?.cancel();
+    _retryTimer?.cancel();
+    _releaseTicket();
+    _releaseTexture();
+    _firstAttemptAt = null;
+    _setState(LiveState.retrying, error: 'No se pudo conectar en la red local; usando la nube');
+    _start();
   }
 
   void _onFailure(String message) {
@@ -228,10 +286,7 @@ class LiveVideoState extends State<LiveVideo> {
   /// The platform video view for one stream session; both report the same
   /// events (firstFrame, size, snapshot, error) to [_onEvent].
   Widget _surface(int session) {
-    final url = widget.app.streamUrl(
-      widget.camera,
-      quality: widget.compact ? StreamQuality.low : StreamQuality.hd,
-    );
+    final url = _url!;
     final snapshotPath = Snapshots.instance.pathFor(widget.camera.deviceId);
     if (Platform.isMacOS) {
       return MpvVideo(key: ValueKey(session), url: url, snapshotPath: snapshotPath, onEvent: _onEvent);
@@ -244,7 +299,13 @@ class LiveVideoState extends State<LiveVideo> {
     final failed = _state == LiveState.failed;
     final text = switch (_state) {
       _ when _waiting => compact ? 'En espera' : 'Esperando a que carguen las otras cámaras…',
-      LiveState.connecting => compact ? 'Conectando' : 'Conectando con la cámara por la nube de Tapo…',
+      LiveState.connecting => compact
+          ? 'Conectando'
+          : switch (_source) {
+              StreamSource.local => 'Conectando con la cámara en tu red…',
+              StreamSource.cloud => 'Conectando con la cámara por la nube de Tapo…',
+              null => 'Conectando con la cámara…',
+            },
       LiveState.retrying => 'Reconectando…',
       LiveState.failed => compact ? 'No responde' : 'La cámara no respondió',
       LiveState.playing => '',
@@ -374,6 +435,50 @@ class LiveVideoState extends State<LiveVideo> {
                   ),
           ),
       ],
+    );
+  }
+}
+
+/// Small "Local" / "Nube" label: whether a camera's video comes straight
+/// from the camera on the home network or through the cloud. Text and icon,
+/// never color alone.
+class SourceChip extends StatelessWidget {
+  const SourceChip({super.key, required this.source, this.onMedia = false, this.large = false});
+  final StreamSource source;
+
+  /// On top of video or a dark bar (white text), instead of a light card.
+  final bool onMedia;
+
+  /// TV size.
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final local = source == StreamSource.local;
+    final background = local
+        ? MatapoColors.success
+        : onMedia
+            ? Colors.white.withValues(alpha: 0.18)
+            : const Color(0xFFE6EBF0);
+    final foreground = local || onMedia ? Colors.white : const Color(0xFF4A5661);
+    final size = large ? 14.0 : 11.0;
+    return Semantics(
+      label: local ? 'Video local' : 'Video por la nube',
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: large ? 9 : 6, vertical: large ? 4 : 2),
+        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(large ? 6 : 4)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(local ? Icons.home_rounded : Icons.cloud_rounded, size: size + 1, color: foreground),
+            SizedBox(width: large ? 5 : 3),
+            Text(
+              local ? 'Local' : 'Nube',
+              style: TextStyle(color: foreground, fontSize: size, fontWeight: FontWeight.w700, height: 1.1),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

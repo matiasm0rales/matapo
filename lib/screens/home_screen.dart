@@ -432,6 +432,7 @@ class _CameraCard extends StatefulWidget {
 
 class _CameraCardState extends State<_CameraCard> {
   LiveState? _live;
+  StreamSource? _source;
 
   @override
   Widget build(BuildContext context) {
@@ -470,6 +471,7 @@ class _CameraCardState extends State<_CameraCard> {
                         camera: camera,
                         compact: true,
                         onStateChanged: (s) => setState(() => _live = s),
+                        onSourceChanged: (s) => setState(() => _source = s),
                       )
                     else
                       SnapshotView(
@@ -509,6 +511,8 @@ class _CameraCardState extends State<_CameraCard> {
                     style: MatapoText.caption,
                   ),
                 ),
+                if (widget.showVideo && !privacy && _live == LiveState.playing && _source != null)
+                  SourceChip(source: _source!, large: true),
               ],
             ),
           ],

@@ -6,9 +6,10 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-/// Live video on macOS: libmpv through media_kit, playing the relay's
-/// MPEG-TS stream from `RelayBridge`. (AVPlayer only plays HLS, not a plain
-/// progressive TS stream.)
+/// Live video on macOS: libmpv through media_kit, playing either the relay's
+/// MPEG-TS stream from `RelayBridge` or the camera's own RTSP stream on the
+/// home network. (AVPlayer only plays HLS, not a plain progressive TS
+/// stream or RTSP.)
 ///
 /// Mirrors LivePlayer.kt on Android and reports the same events to
 /// [onEvent], so LiveVideo handles both platforms the same way:
@@ -55,6 +56,9 @@ class _MpvVideoState extends State<MpvVideo> {
     ('video-latency-hacks', 'yes'),
     ('aid', 'no'),
     ('network-timeout', '30'),
+    // RTSP from the camera: RTP over the RTSP connection is steadier on
+    // Wi-Fi than UDP, which loses packets and smears the picture.
+    ('rtsp-transport', 'tcp'),
   ];
 
   /// Players on screen. The Mac doesn't sleep or start the screensaver while
@@ -97,7 +101,7 @@ class _MpvVideoState extends State<MpvVideo> {
     _subscriptions
       ..add(_player.stream.error.listen(_onError))
       ..add(_player.stream.completed.listen((done) {
-        if (done) _fail('Stream ended');
+        if (done) _fail('La transmisión terminó');
       }))
       ..add(_player.stream.width.listen((w) => _onSize(w, _height)))
       ..add(_player.stream.height.listen((h) => _onSize(_width, h)));
@@ -168,12 +172,12 @@ class _MpvVideoState extends State<MpvVideo> {
       _lastMovedAt = now;
     } else if (now.difference(_lastMovedAt) > _stallAfter) {
       debugPrint('MatapoPlayer: no new frame for ${_stallAfter.inSeconds} s, reconnecting');
-      _fail('Video stopped');
+      _fail('El video se detuvo');
     }
   }
 
   /// The relay is an unbounded live file, so there is no live edge to seek
-  /// to. Play slightly faster while more than ~1.5 s is buffered to drain
+  /// to (RTSP doesn't build up delay, but the check is harmless there). Play slightly faster while more than ~1.5 s is buffered to drain
   /// accumulated delay (same thresholds as on Android).
   Future<void> _checkLatency() async {
     final native = _player.platform;

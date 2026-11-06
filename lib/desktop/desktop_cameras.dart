@@ -6,6 +6,7 @@ import '../player/stream_queue.dart';
 import '../screens/home_screen.dart' show cameraStatus;
 import '../state/app_state.dart';
 import 'desktop_live.dart';
+import 'desktop_local_camera.dart';
 import 'desktop_theme.dart';
 
 /// Turns privacy mode on or off with progress and result messages.
@@ -33,6 +34,7 @@ class CamerasSection extends StatefulWidget {
 class _CamerasSectionState extends State<CamerasSection> {
   final _videoKeys = <String, GlobalKey<LiveVideoState>>{};
   final _states = <String, LiveState>{};
+  final _sources = <String, StreamSource>{};
 
   void _reconnect(Camera camera) {
     _videoKeys[camera.deviceId]?.currentState?.retry();
@@ -49,6 +51,9 @@ class _CamerasSectionState extends State<CamerasSection> {
         camera.privacy == null ? null : () => togglePrivacy(context, camera),
       ),
       MenuAction('Reconectar', Icons.refresh_rounded, () => _reconnect(camera)),
+      null,
+      // Open previews restart by themselves when the settings change.
+      MenuAction('Conexión local…', Icons.lan_outlined, () => showLocalCameraDialog(context, camera)),
     ]);
   }
 
@@ -80,8 +85,12 @@ class _CamerasSectionState extends State<CamerasSection> {
               videoKey: key,
               showVideo: app.livePreviews && active,
               liveState: _states[camera.deviceId],
+              source: _sources[camera.deviceId],
               onStateChanged: (s) {
                 if (_states[camera.deviceId] != s) setState(() => _states[camera.deviceId] = s);
+              },
+              onSourceChanged: (s) {
+                if (_sources[camera.deviceId] != s) setState(() => _sources[camera.deviceId] = s);
               },
               onOpen: () => openDesktopLive(context, i),
               onMenu: (pos) => _menu(camera, i, pos),
@@ -102,7 +111,9 @@ class _CameraCard extends StatelessWidget {
     required this.videoKey,
     required this.showVideo,
     required this.liveState,
+    required this.source,
     required this.onStateChanged,
+    required this.onSourceChanged,
     required this.onOpen,
     required this.onMenu,
     required this.onReconnect,
@@ -114,7 +125,9 @@ class _CameraCard extends StatelessWidget {
   final GlobalKey<LiveVideoState> videoKey;
   final bool showVideo;
   final LiveState? liveState;
+  final StreamSource? source;
   final ValueChanged<LiveState> onStateChanged;
+  final ValueChanged<StreamSource> onSourceChanged;
   final VoidCallback onOpen;
   final void Function(Offset) onMenu;
   final VoidCallback onReconnect;
@@ -136,7 +149,14 @@ class _CameraCard extends StatelessWidget {
                 if (privacy)
                   const _PrivacyPlaceholder()
                 else if (showVideo)
-                  LiveVideo(key: videoKey, app: app, camera: camera, compact: true, onStateChanged: onStateChanged)
+                  LiveVideo(
+                    key: videoKey,
+                    app: app,
+                    camera: camera,
+                    compact: true,
+                    onStateChanged: onStateChanged,
+                    onSourceChanged: onSourceChanged,
+                  )
                 else
                   SnapshotView(
                     deviceId: camera.deviceId,
@@ -214,6 +234,10 @@ class _CameraCard extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
+                          if (showVideo && !privacy && liveState == LiveState.playing && source != null) ...[
+                            const SizedBox(width: 6),
+                            SourceChip(source: source!),
+                          ],
                         ],
                       ),
                     ],

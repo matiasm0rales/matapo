@@ -4,6 +4,7 @@ import '../main.dart';
 import '../ui/guide.dart';
 import '../ui/theme.dart';
 import '../ui/tv.dart';
+import 'local_cameras_screen.dart';
 
 class SettingsPanel extends StatelessWidget {
   const SettingsPanel({super.key});
@@ -55,6 +56,21 @@ class SettingsPanel extends StatelessWidget {
                   const steps = [5, 10, 20];
                   app.setPtzStep(steps[(steps.indexOf(app.ptzStep) + 1) % steps.length]);
                 },
+              ),
+              const SizedBox(height: MatapoSpace.md),
+              TvTile(
+                title: 'Conexión local',
+                subtitle: () {
+                  final n = app.cameras.where(app.hasLocal).length;
+                  return n == 0
+                      ? 'Video directo desde las cámaras en tu casa'
+                      : n == 1
+                          ? '1 cámara con video local'
+                          : '$n cámaras con video local';
+                }(),
+                icon: Icons.lan_rounded,
+                trailing: const Icon(Icons.chevron_right_rounded, color: MatapoColors.muted),
+                onSelect: () => openLocalCameras(context),
               ),
               const SizedBox(height: MatapoSpace.md),
               TvTile(

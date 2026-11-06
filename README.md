@@ -52,6 +52,7 @@ VPN ni estar en la misma red que las cámaras.
 - [Capturas](#capturas)
 - [Uso en la Mac](#uso-en-la-mac)
 - [Uso con el control remoto](#uso-con-el-control-remoto)
+- [Conexión local (RTSP)](#conexión-local-rtsp)
 - [Instalación](#instalación)
 - [Compilar desde el código](#compilar-desde-el-código)
 - [Cómo funciona](#cómo-funciona)
@@ -154,6 +155,39 @@ VPN ni estar en la misma red que las cámaras.
 Los controles sin botones de Menú, canal o números, como el de Google TV,
 pueden hacer todo con los botones en pantalla.
 
+## Conexión local (RTSP)
+
+En casa, Matapo puede recibir el video **directo desde cada cámara** por la
+red local (RTSP), sin pasar por el relay de la nube de TP-Link. Así no hay
+cortes de sesión del relay y la imagen llega con menos demora. El movimiento
+y el modo privacidad siguen yendo por la nube.
+
+1. En la app de Tapo del teléfono, abrí cada cámara → **Configuración
+   avanzada → Cuenta de la cámara** y creá un usuario y una contraseña (no
+   son los de tu cuenta de Tapo).
+2. Buscá la IP de la cámara (en la app de Tapo, en la información del
+   dispositivo, o en el router) y **reservala en el router** para que no
+   cambie.
+3. En Matapo:
+   - **Mac:** **Ajustes → Conexión local → Configurar…**, o clic derecho en
+     una cámara → **Conexión local…**
+   - **TV:** **Ajustes → Conexión local**, elegí la cámara.
+4. Completá IP, puerto (554), usuario y contraseña, y tocá **Probar**: tiene
+   que decir **Conectada**. Después **Guardar**.
+
+Cada cámara muestra de dónde viene su video: **Local** (verde) o **Nube**
+(gris), en la lista, en la vista en grande y en las grillas.
+
+- **Fuera de casa no hay que hacer nada.** Antes de cada transmisión la app
+  prueba la cámara en la red local durante unos segundos; si no responde, usa
+  la nube. Si una transmisión local se corta, pasa sola a la nube y vuelve a
+  probar la red local un par de minutos después.
+- Las cámaras aceptan **pocas transmisiones RTSP a la vez** (en general dos
+  o tres). Si tenés Matapo abierta en varios equipos, alguno puede terminar
+  usando la nube.
+- La vista en grande usa el stream HD (`/stream1`) y las vistas chicas y
+  grillas el de baja resolución (`/stream2`).
+
 ## Instalación
 
 ### Android TV
@@ -254,18 +288,30 @@ fvm flutter run -d macos --dart-define=MATAPO_DEMO=true --dart-define=MATAPO_DEM
 
 En el TV es igual, con `fvm flutter build apk` y `adb reverse tcp:8099 tcp:8099`.
 
+La conexión local también se puede probar sin cámaras, con
+[mediamtx](https://github.com/bluenviron/mediamtx) como cámara RTSP falsa
+(con un usuario de lectura y `rtspAuthMethods: [digest]`, como las Tapo) y
+ffmpeg publicando `testsrc2` en `rtsp://127.0.0.1:8554/stream1` y
+`/stream2`. En modo demo, configurá una cámara con IP `127.0.0.1` y puerto
+`8554`: si mediamtx se corta, la cámara pasa sola al stream de demo.
+
 ## Cómo funciona
 
 ```
 Nube de Tapo ──HTTPS──▶ TapoCloud (Dart) ──▶ RelayBridge en 127.0.0.1 ──▶ reproductor
   login, MFA,             API firmada,          MPEG-TS plano,              ExoPlayer (TV)
   cámaras, control        lector del relay      clave por sesión            libmpv (Mac)
+
+Cámara en la red local ──RTSP (TCP)──────────────────────────────────▶ reproductor
+  /stream1 HD, /stream2 baja              (si responde; si no, la nube)
 ```
 
 | Parte | Archivo |
 |---|---|
 | Cliente de la nube de Tapo: API firmada, MFA, cámaras, privacidad, movimiento, relay de video | [`lib/api/tapo_cloud.dart`](lib/api/tapo_cloud.dart) |
 | Puente local que entrega cada relay al reproductor como MPEG-TS | [`lib/api/relay_bridge.dart`](lib/api/relay_bridge.dart) |
+| Prueba RTSP (`DESCRIBE` con Digest o Basic) para elegir entre video local y nube | [`lib/api/rtsp_probe.dart`](lib/api/rtsp_probe.dart) |
+| Configuración local de cada cámara y URLs RTSP | [`lib/state/local_cameras.dart`](lib/state/local_cameras.dart) |
 | Reproductor del TV: ExoPlayer (media3) con buffers chicos y aceleración para alcanzar el vivo | [`android/.../LivePlayer.kt`](android/app/src/main/kotlin/io/github/matapo/LivePlayer.kt) |
 | Reproductor de la Mac: libmpv con [media_kit](https://pub.dev/packages/media_kit) | [`lib/player/mpv_video.dart`](lib/player/mpv_video.dart) |
 | Estado, sesión y ajustes | [`lib/state/app_state.dart`](lib/state/app_state.dart) |
@@ -288,8 +334,14 @@ y del manejo del relay de `tapo_cloud_app.py`, de la app de escritorio Topo.
 - **El video no sale del equipo.** El puente local solo escucha en
   `127.0.0.1` y cada dirección de video lleva una clave aleatoria creada al
   abrir la app, así que otras apps no pueden leerlo.
-- La app solo habla con la nube de Tapo. Nunca se conecta a tu red ni
-  directamente a las cámaras.
+- **Contraseñas de las cámaras.** Si configurás la conexión local, la
+  contraseña de cada cámara se guarda en el Llavero de macOS o en el
+  almacenamiento cifrado de Android, y solo se le envía a la cámara dentro de
+  tu red. **Cerrar sesión** también la borra.
+- Sin conexión local configurada, la app solo habla con la nube de Tapo y no
+  se conecta a las cámaras. Con conexión local, se conecta a la IP que
+  cargaste. RTSP **no va cifrado** dentro de la red de tu casa: cualquiera
+  conectado a esa red podría ver ese video.
 
 ## Estado y limitaciones
 

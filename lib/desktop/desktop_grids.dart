@@ -394,6 +394,8 @@ class _GridTile extends StatefulWidget {
 
 class _GridTileState extends State<_GridTile> {
   bool _hovered = false;
+  LiveState? _live;
+  StreamSource? _source;
 
   @override
   Widget build(BuildContext context) {
@@ -437,7 +439,17 @@ class _GridTileState extends State<_GridTile> {
                 child: Center(child: Icon(Icons.visibility_off_outlined, color: Color(0xFFC9D3DC), size: 32)),
               )
             else if (widget.active)
-              LiveVideo(app: widget.app, camera: camera, compact: true)
+              LiveVideo(
+                app: widget.app,
+                camera: camera,
+                compact: true,
+                onStateChanged: (s) {
+                  if (mounted && s != _live) setState(() => _live = s);
+                },
+                onSourceChanged: (s) {
+                  if (mounted && s != _source) setState(() => _source = s);
+                },
+              )
             else
               const ColoredBox(color: Colors.black),
             Positioned(
@@ -446,7 +458,16 @@ class _GridTileState extends State<_GridTile> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: const Color(0xB3101820), borderRadius: BorderRadius.circular(6)),
-                child: Text(camera.name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(camera.name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    if (widget.active && camera.privacy != true && _live == LiveState.playing && _source != null) ...[
+                      const SizedBox(width: 6),
+                      SourceChip(source: _source!, onMedia: true),
+                    ],
+                  ],
+                ),
               ),
             ),
             if (_hovered)

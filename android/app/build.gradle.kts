@@ -68,4 +68,6 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3")
     implementation("androidx.media3:media3-datasource:$media3")
     implementation("androidx.media3:media3-extractor:$media3")
+    // Local video straight from the camera on the home network.
+    implementation("androidx.media3:media3-exoplayer-rtsp:$media3")
 }

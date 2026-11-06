@@ -46,6 +46,7 @@ class _LiveScreenState extends State<LiveScreen> {
   Timer? _hudTimer;
   Timer? _titleTimer;
   LiveState _liveState = LiveState.connecting;
+  StreamSource? _source;
   bool _privacyBusy = false;
 
   // Pan/tilt: one request in flight; while busy remember only the latest
@@ -129,6 +130,7 @@ class _LiveScreenState extends State<LiveScreen> {
     setState(() {
       _index = next;
       _liveState = LiveState.connecting;
+      _source = null;
       _pendingMove = null;
     });
     _flashTitle();
@@ -286,6 +288,7 @@ class _LiveScreenState extends State<LiveScreen> {
                   camera: camera,
                   queued: false,
                   onStateChanged: (s) => setState(() => _liveState = s),
+                  onSourceChanged: (s) => setState(() => _source = s),
                 ),
               // Directional feedback for pan & tilt.
               if (_lastDirection != null) _ArrowFlash(direction: _lastDirection!),
@@ -303,6 +306,7 @@ class _LiveScreenState extends State<LiveScreen> {
                       index: _index,
                       count: app.cameras.length,
                       live: !privacy && _liveState == LiveState.playing,
+                      source: _source,
                     ),
                   ),
                 ),
@@ -365,11 +369,12 @@ class _LiveScreenState extends State<LiveScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.camera, required this.index, required this.count, required this.live});
+  const _TopBar({required this.camera, required this.index, required this.count, required this.live, this.source});
   final Camera camera;
   final int index;
   final int count;
   final bool live;
+  final StreamSource? source;
 
   @override
   Widget build(BuildContext context) {
@@ -396,7 +401,12 @@ class _TopBar extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 8),
+            if (source != null) ...[
+              SourceChip(source: source!, onMedia: true, large: true),
+              const SizedBox(width: 14),
+            ] else
+              const SizedBox(width: 6),
           ],
           Expanded(
             child: Row(
