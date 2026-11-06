@@ -12,25 +12,25 @@ class _Brand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget feature(IconData icon, String text) => Padding(
-          padding: const EdgeInsets.only(bottom: TopoSpace.md),
+          padding: const EdgeInsets.only(bottom: MatapoSpace.md),
           child: Row(
             children: [
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: TopoColors.surface, borderRadius: BorderRadius.circular(TopoRadius.md)),
-                child: Icon(icon, color: TopoColors.primary, size: 24),
+                decoration: BoxDecoration(color: MatapoColors.surface, borderRadius: BorderRadius.circular(MatapoRadius.md)),
+                child: Icon(icon, color: MatapoColors.primary, size: 24),
               ),
-              const SizedBox(width: TopoSpace.lg),
-              Expanded(child: Text(text, style: TopoText.body)),
+              const SizedBox(width: MatapoSpace.lg),
+              Expanded(child: Text(text, style: MatapoText.body)),
             ],
           ),
         );
     return Container(
-      padding: const EdgeInsets.all(TopoSpace.x3),
+      padding: const EdgeInsets.all(MatapoSpace.x3),
       decoration: BoxDecoration(
         gradient: featuredGradient,
-        borderRadius: BorderRadius.circular(TopoRadius.xl),
+        borderRadius: BorderRadius.circular(MatapoRadius.xl),
         boxShadow: featuredShadow,
       ),
       child: Column(
@@ -39,25 +39,25 @@ class _Brand extends StatelessWidget {
         children: [
           Row(
             children: [
-              Image.asset('assets/topo.png', width: 64, height: 64, semanticLabel: 'Tapo'),
-              const SizedBox(width: TopoSpace.md),
+              Image.asset('assets/matapo.png', width: 64, height: 64, semanticLabel: 'Matapo'),
+              const SizedBox(width: MatapoSpace.md),
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tapo', style: TopoText.display),
-                  Text('for Android TV', style: TextStyle(fontSize: 16, color: TopoColors.primaryAction, fontWeight: FontWeight.w500)),
+                  Text('Matapo', style: MatapoText.display),
+                  Text('para Android TV', style: TextStyle(fontSize: 16, color: MatapoColors.primaryAction, fontWeight: FontWeight.w500)),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: TopoSpace.x2),
-          const Text('Your Tapo cameras on the big screen.', style: TopoText.title),
-          const SizedBox(height: TopoSpace.xl),
-          feature(Icons.cloud_rounded, 'Live view through the Tapo cloud'),
-          feature(Icons.grid_view_rounded, 'Multi-view grids you can save'),
-          feature(Icons.open_with_rounded, 'Pan & tilt with your remote'),
-          const SizedBox(height: TopoSpace.sm),
-          const Text('Unofficial app, not affiliated with TP-Link.', style: TopoText.caption),
+          const SizedBox(height: MatapoSpace.x2),
+          const Text('Tus cámaras Tapo en la pantalla grande.', style: MatapoText.title),
+          const SizedBox(height: MatapoSpace.xl),
+          feature(Icons.cloud_rounded, 'Video en vivo a través de la nube de Tapo'),
+          feature(Icons.grid_view_rounded, 'Grillas de varias cámaras que podés guardar'),
+          feature(Icons.open_with_rounded, 'Movimiento de la cámara con el control remoto'),
+          const SizedBox(height: MatapoSpace.sm),
+          const Text('App no oficial, sin relación con TP-Link.', style: MatapoText.caption),
         ],
       ),
     );
@@ -76,17 +76,17 @@ class _Shell extends StatelessWidget {
         child: Row(
           children: [
             const Expanded(flex: 10, child: Center(child: _Brand())),
-            const SizedBox(width: TopoSpace.x3),
+            const SizedBox(width: MatapoSpace.x3),
             Expanded(
               flex: 11,
               child: Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(8),
                   child: Container(
-                    padding: const EdgeInsets.all(TopoSpace.x3),
+                    padding: const EdgeInsets.all(MatapoSpace.x3),
                     decoration: BoxDecoration(
-                      color: TopoColors.surface,
-                      borderRadius: BorderRadius.circular(TopoRadius.xl),
+                      color: MatapoColors.surface,
+                      borderRadius: BorderRadius.circular(MatapoRadius.xl),
                       boxShadow: cardShadow,
                     ),
                     child: card,
@@ -109,15 +109,15 @@ class _ErrorText extends StatelessWidget {
   Widget build(BuildContext context) {
     if (text == null) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: TopoSpace.md),
+      padding: const EdgeInsets.only(top: MatapoSpace.md),
       child: Semantics(
         liveRegion: true,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.error_rounded, color: TopoColors.error, size: 22),
-            const SizedBox(width: TopoSpace.sm),
-            Expanded(child: Text(text!, style: TopoText.body.copyWith(color: TopoColors.error, height: 1.3))),
+            const Icon(Icons.error_rounded, color: MatapoColors.error, size: 22),
+            const SizedBox(width: MatapoSpace.sm),
+            Expanded(child: Text(text!, style: MatapoText.body.copyWith(color: MatapoColors.error, height: 1.3))),
           ],
         ),
       ),
@@ -176,12 +176,12 @@ class _LoginScreenState extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Sign in', style: TopoText.headline),
-          const Text('Use the same account as the Tapo app.', style: TopoText.caption),
-          const SizedBox(height: TopoSpace.xl),
+          const Text('Iniciar sesión', style: MatapoText.headline),
+          const Text('Usá la misma cuenta que en la app de Tapo.', style: MatapoText.caption),
+          const SizedBox(height: MatapoSpace.xl),
           TvTextField(
-            label: 'Email',
-            hint: 'name@example.com',
+            label: 'Correo electrónico',
+            hint: 'nombre@ejemplo.com',
             icon: Icons.alternate_email_rounded,
             value: _email,
             keyboardType: TextInputType.emailAddress,
@@ -189,10 +189,10 @@ class _LoginScreenState extends State<LoginScreen> {
             onChanged: (v) => setState(() => _email = v.trim()),
             onSubmitted: () => _passwordFocus.requestFocus(),
           ),
-          const SizedBox(height: TopoSpace.lg),
+          const SizedBox(height: MatapoSpace.lg),
           TvTextField(
-            label: 'Password',
-            hint: 'Your Tapo password',
+            label: 'Contraseña',
+            hint: 'Tu contraseña de Tapo',
             icon: Icons.lock_rounded,
             value: _password,
             obscure: true,
@@ -201,9 +201,9 @@ class _LoginScreenState extends State<LoginScreen> {
             onSubmitted: () => _signInFocus.requestFocus(),
           ),
           _ErrorText(_error),
-          const SizedBox(height: TopoSpace.x2),
+          const SizedBox(height: MatapoSpace.x2),
           TvButton(
-            label: _busy ? 'Signing in…' : 'Sign in',
+            label: _busy ? 'Iniciando sesión…' : 'Iniciar sesión',
             icon: Icons.login_rounded,
             style: TvButtonStyle.primary,
             focusNode: _signInFocus,
@@ -211,19 +211,19 @@ class _LoginScreenState extends State<LoginScreen> {
             expand: true,
             onPressed: _signIn,
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           Row(
             children: [
               TvButton(
-                label: 'Remote guide',
+                label: 'Guía del control',
                 icon: Icons.help_outline_rounded,
                 style: TvButtonStyle.text,
                 onPressed: () => showRemoteGuide(context),
               ),
               if (app.hasSavedSession) ...[
-                const SizedBox(width: TopoSpace.sm),
+                const SizedBox(width: MatapoSpace.sm),
                 TvButton(
-                  label: 'Retry saved session',
+                  label: 'Reintentar la sesión guardada',
                   icon: Icons.refresh_rounded,
                   style: TvButtonStyle.text,
                   onPressed: app.retrySavedSession,
@@ -231,8 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ],
           ),
-          const SizedBox(height: TopoSpace.sm),
-          const Text('Your password is never stored on this TV.', style: TopoText.caption),
+          const SizedBox(height: MatapoSpace.sm),
+          const Text('Tu contraseña nunca se guarda en este TV.', style: MatapoText.caption),
         ],
       ),
     );
@@ -293,7 +293,7 @@ class _MfaScreenState extends State<MfaScreen> {
   Widget _spinner() => const SizedBox(
         width: 22,
         height: 22,
-        child: CircularProgressIndicator(strokeWidth: 2.5, color: TopoColors.primaryAction),
+        child: CircularProgressIndicator(strokeWidth: 2.5, color: MatapoColors.primaryAction),
       );
 
   @override
@@ -302,7 +302,7 @@ class _MfaScreenState extends State<MfaScreen> {
     final pending = app.pendingMfa;
     if (pending == null) return const SizedBox.shrink();
     final requested = pending.requestedType;
-    const chevron = Icon(Icons.chevron_right_rounded, color: TopoColors.muted);
+    const chevron = Icon(Icons.chevron_right_rounded, color: MatapoColors.muted);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -313,32 +313,32 @@ class _MfaScreenState extends State<MfaScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Verify it's you", style: TopoText.headline),
+            const Text("Verify it's you", style: MatapoText.headline),
             Text(
               requested == null
-                  ? 'This TV is new to your Tapo account. Choose how to get a code.'
+                  ? 'Este TV es nuevo para tu cuenta de Tapo. Elegí cómo recibir el código.'
                   : requested == 1
-                      ? 'Open the Tapo app on your phone and enter the code it shows.'
-                      : 'Enter the code sent to ${pending.username}.',
-              style: TopoText.caption,
+                      ? 'Abrí la app de Tapo en tu teléfono e ingresá el código que muestra.'
+                      : 'Ingresá el código que enviamos a ${pending.username}.',
+              style: MatapoText.caption,
             ),
-            const SizedBox(height: TopoSpace.xl),
+            const SizedBox(height: MatapoSpace.xl),
             if (requested == null) ...[
               if (pending.types.contains(1)) ...[
                 TvTile(
-                  title: 'Tapo app notification',
-                  subtitle: 'Get the code on your phone',
+                  title: 'Notificación en la app de Tapo',
+                  subtitle: 'Recibí el código en tu teléfono',
                   icon: Icons.phone_iphone_rounded,
                   autofocus: true,
                   trailing: _sending == 1 ? _spinner() : chevron,
                   onSelect: _sending == null ? () => _request(1) : null,
                 ),
-                const SizedBox(height: TopoSpace.md),
+                const SizedBox(height: MatapoSpace.md),
               ],
               if (pending.types.contains(2))
                 TvTile(
-                  title: 'Email code',
-                  subtitle: 'Send a code to ${pending.username}',
+                  title: 'Código por correo',
+                  subtitle: 'Enviar un código a ${pending.username}',
                   icon: Icons.mail_rounded,
                   autofocus: !pending.types.contains(1),
                   trailing: _sending == 2 ? _spinner() : chevron,
@@ -346,8 +346,8 @@ class _MfaScreenState extends State<MfaScreen> {
                 ),
             ] else ...[
               TvTextField(
-                label: 'Verification code',
-                hint: '6-digit code',
+                label: 'Código de verificación',
+                hint: 'Código de 6 dígitos',
                 icon: Icons.pin_rounded,
                 value: _code,
                 keyboardType: TextInputType.number,
@@ -355,9 +355,9 @@ class _MfaScreenState extends State<MfaScreen> {
                 onChanged: (v) => setState(() => _code = v.trim()),
                 onSubmitted: () => _verifyFocus.requestFocus(),
               ),
-              const SizedBox(height: TopoSpace.xl),
+              const SizedBox(height: MatapoSpace.xl),
               TvButton(
-                label: _verifying ? 'Verifying…' : 'Verify',
+                label: _verifying ? 'Verificando…' : 'Verificar',
                 icon: Icons.verified_user_rounded,
                 style: TvButtonStyle.primary,
                 expand: true,
@@ -365,12 +365,12 @@ class _MfaScreenState extends State<MfaScreen> {
                 focusNode: _verifyFocus,
                 onPressed: _verify,
               ),
-              const SizedBox(height: TopoSpace.md),
+              const SizedBox(height: MatapoSpace.md),
               Wrap(
-                spacing: TopoSpace.sm,
+                spacing: MatapoSpace.sm,
                 children: [
                   TvButton(
-                    label: 'Send again',
+                    label: 'Enviar de nuevo',
                     icon: Icons.refresh_rounded,
                     style: TvButtonStyle.text,
                     busy: _sending != null,
@@ -378,7 +378,7 @@ class _MfaScreenState extends State<MfaScreen> {
                   ),
                   if (pending.types.length > 1)
                     TvButton(
-                      label: requested == 1 ? 'Use email instead' : 'Use Tapo app instead',
+                      label: requested == 1 ? 'Usar el correo' : 'Usar la app de Tapo',
                       style: TvButtonStyle.text,
                       onPressed: () => _request(requested == 1 ? 2 : 1),
                     ),
@@ -386,11 +386,11 @@ class _MfaScreenState extends State<MfaScreen> {
               ),
             ],
             _ErrorText(_error),
-            const SizedBox(height: TopoSpace.md),
+            const SizedBox(height: MatapoSpace.md),
             Align(
               alignment: Alignment.centerLeft,
               child: TvButton(
-                label: 'Back to sign in',
+                label: 'Volver a iniciar sesión',
                 icon: Icons.arrow_back_rounded,
                 style: TvButtonStyle.text,
                 onPressed: app.cancelMfa,

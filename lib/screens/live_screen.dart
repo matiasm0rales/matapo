@@ -186,7 +186,7 @@ class _LiveScreenState extends State<LiveScreen> {
     setState(() => _privacyBusy = true);
     try {
       await _app.setPrivacy(camera, enable);
-      if (mounted) showToast(context, enable ? 'Privacy mode is on' : 'Privacy mode is off');
+      if (mounted) showToast(context, enable ? 'Modo privacidad activado' : 'Modo privacidad desactivado');
     } catch (e) {
       if (mounted) showToast(context, e.toString(), error: true);
     } finally {
@@ -258,7 +258,7 @@ class _LiveScreenState extends State<LiveScreen> {
     final app = AppScope.of(context);
     final camera = _camera;
     if (camera == null) {
-      return const Scaffold(body: Center(child: Text('No camera')));
+      return const Scaffold(body: Center(child: Text('Sin cámara')));
     }
     final privacy = camera.privacy == true;
     final canPtz = camera.ptz == true && !privacy;
@@ -269,7 +269,7 @@ class _LiveScreenState extends State<LiveScreen> {
         if (!didPop) _hideHud();
       },
       child: Scaffold(
-        backgroundColor: TopoColors.media,
+        backgroundColor: MatapoColors.media,
         body: Focus(
           focusNode: _rootFocus,
           autofocus: true,
@@ -387,7 +387,7 @@ class _TopBar extends StatelessWidget {
           if (live) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              decoration: BoxDecoration(color: TopoColors.error, borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: MatapoColors.error, borderRadius: BorderRadius.circular(6)),
               child: const Row(
                 children: [
                   Icon(Icons.circle, size: 8, color: Colors.white),
@@ -417,7 +417,7 @@ class _TopBar extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(20)),
-              child: Text('Camera ${index + 1} of $count', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              child: Text('Cámara ${index + 1} de $count', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
@@ -470,11 +470,11 @@ class _Controls extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (hasMultiple) ...[
-                  TvButton(label: 'Previous', icon: Icons.skip_previous_rounded, onMedia: true, onPressed: onPrev),
+                  TvButton(label: 'Anterior', icon: Icons.skip_previous_rounded, onMedia: true, onPressed: onPrev),
                   const SizedBox(width: 10),
                 ],
                 TvButton(
-                  label: privacy ? 'Turn privacy off' : 'Turn privacy on',
+                  label: privacy ? 'Desactivar privacidad' : 'Activar privacidad',
                   icon: privacy ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                   onMedia: true,
                   focusNode: firstFocus,
@@ -484,26 +484,26 @@ class _Controls extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 if (camera.ptz == true) ...[
-                  TvButton(label: 'Step $step°', icon: Icons.straighten_rounded, onMedia: true, onPressed: onStep),
+                  TvButton(label: 'Paso $step°', icon: Icons.straighten_rounded, onMedia: true, onPressed: onStep),
                   const SizedBox(width: 10),
-                  TvButton(label: 'Pan & tilt', icon: Icons.open_with_rounded, onMedia: true, onPressed: onHide),
+                  TvButton(label: 'Movimiento', icon: Icons.open_with_rounded, onMedia: true, onPressed: onHide),
                   const SizedBox(width: 10),
                 ],
-                TvButton(label: 'Reconnect', icon: Icons.refresh_rounded, onMedia: true, onPressed: onReconnect),
+                TvButton(label: 'Reconectar', icon: Icons.refresh_rounded, onMedia: true, onPressed: onReconnect),
                 const SizedBox(width: 10),
                 TvButton(label: '', icon: Icons.help_outline_rounded, onMedia: true, onPressed: onGuide),
                 if (hasMultiple) ...[
                   const SizedBox(width: 10),
-                  TvButton(label: 'Next', icon: Icons.skip_next_rounded, onMedia: true, onPressed: onNext),
+                  TvButton(label: 'Siguiente', icon: Icons.skip_next_rounded, onMedia: true, onPressed: onNext),
                 ],
               ],
             ),
           ),
           const SizedBox(height: 14),
           HintBar(onMedia: true, [
-            if (canPtz) (const KeyCap('', icon: Icons.arrow_back_rounded, onMedia: true), 'Hide controls, then use arrows to pan & tilt'),
-            if (!canPtz) (const KeyCap('', icon: Icons.arrow_back_rounded, onMedia: true), 'Hide controls'),
-            if (hasMultiple) (const KeyCap('CH ±', onMedia: true), 'Switch camera'),
+            if (canPtz) (const KeyCap('', icon: Icons.arrow_back_rounded, onMedia: true), 'Ocultá los controles y usá las flechas para mover'),
+            if (!canPtz) (const KeyCap('', icon: Icons.arrow_back_rounded, onMedia: true), 'Ocultar controles'),
+            if (hasMultiple) (const KeyCap('CH ±', onMedia: true), 'Cambiar de cámara'),
           ]),
         ],
       ),
@@ -520,11 +520,11 @@ class _HintChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-      decoration: BoxDecoration(color: TopoColors.media.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(TopoRadius.md)),
+      decoration: BoxDecoration(color: MatapoColors.media.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(MatapoRadius.md)),
       child: HintBar(onMedia: true, [
-        if (canPtz) (const KeyCap('', icon: Icons.open_with_rounded, onMedia: true), 'Pan & tilt'),
-        if (!canPtz && multiple) (const KeyCap('', icon: Icons.swap_horiz_rounded, onMedia: true), 'Switch camera'),
-        (const KeyCap('OK', onMedia: true), 'Controls'),
+        if (canPtz) (const KeyCap('', icon: Icons.open_with_rounded, onMedia: true), 'Movimiento'),
+        if (!canPtz && multiple) (const KeyCap('', icon: Icons.swap_horiz_rounded, onMedia: true), 'Cambiar de cámara'),
+        (const KeyCap('OK', onMedia: true), 'Controles'),
       ]),
     );
   }
@@ -551,11 +551,11 @@ class _ArrowFlash extends StatelessWidget {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: TopoColors.media.withValues(alpha: 0.7),
+            color: MatapoColors.media.withValues(alpha: 0.7),
             shape: BoxShape.circle,
-            border: Border.all(color: TopoColors.onMedia, width: 2),
+            border: Border.all(color: MatapoColors.onMedia, width: 2),
           ),
-          child: Icon(icon, color: TopoColors.onMedia, size: 52),
+          child: Icon(icon, color: MatapoColors.onMedia, size: 52),
         ),
       ),
     );
@@ -570,7 +570,7 @@ class _PrivacyCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: TopoColors.media,
+      color: MatapoColors.media,
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -578,14 +578,14 @@ class _PrivacyCover extends StatelessWidget {
           Container(
             width: 96,
             height: 96,
-            decoration: BoxDecoration(color: TopoColors.primary.withValues(alpha: 0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.visibility_off_rounded, size: 46, color: TopoColors.onMedia),
+            decoration: BoxDecoration(color: MatapoColors.primary.withValues(alpha: 0.2), shape: BoxShape.circle),
+            child: const Icon(Icons.visibility_off_rounded, size: 46, color: MatapoColors.onMedia),
           ),
           const SizedBox(height: 20),
-          const Text('Privacy mode is on', style: TextStyle(color: TopoColors.onMedia, fontSize: 28, fontWeight: FontWeight.w700)),
+          const Text('Modo privacidad activado', style: TextStyle(color: MatapoColors.onMedia, fontSize: 28, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           const Text(
-            'The camera lens is covered and no video is recorded.',
+            'El lente de la cámara está tapado y no se graba video.',
             style: TextStyle(color: Color(0xFFC9D3DC), fontSize: 18),
           ),
           const SizedBox(height: 24),
@@ -596,8 +596,8 @@ class _PrivacyCover extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
               decoration: BoxDecoration(
-                color: TopoColors.primaryAction,
-                borderRadius: BorderRadius.circular(TopoRadius.full),
+                color: MatapoColors.primaryAction,
+                borderRadius: BorderRadius.circular(MatapoRadius.full),
                 // White separator + blue outline: this control is the
                 // screen's focused action (OK triggers it).
                 border: Border.all(color: Colors.white, width: 3),
@@ -609,14 +609,14 @@ class _PrivacyCover extends StatelessWidget {
                     const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: TopoColors.onPrimary),
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: MatapoColors.onPrimary),
                     )
                   else
                     const KeyCap('OK', onMedia: true),
                   const SizedBox(width: 10),
                   Text(
-                    busy ? 'Turning off…' : 'Turn off privacy mode',
-                    style: const TextStyle(color: TopoColors.onPrimary, fontSize: 18, fontWeight: FontWeight.w500),
+                    busy ? 'Desactivando…' : 'Desactivar modo privacidad',
+                    style: const TextStyle(color: MatapoColors.onPrimary, fontSize: 18, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

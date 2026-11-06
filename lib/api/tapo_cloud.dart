@@ -15,7 +15,10 @@ import 'package:crypto/crypto.dart';
 
 const appName = 'TP-Link_Tapo_Android';
 const appVersion = '3.21.114';
-const productName = 'Topo TV';
+const productName = 'Matapo';
+
+/// How this device appears in the Tapo account's list of logged-in devices.
+String get terminalName => Platform.isMacOS ? '$productName - Mac' : '$productName - Android TV';
 const loginUrl = 'https://n-wap-gw.tplinkcloud.com';
 const defaultCipcUrl = 'https://cipc.api.cloud';
 
@@ -25,15 +28,15 @@ const _accessKey = '4d11b6b9d5ea4d19a829adbb9714b057';
 const _accessSecret = '6ed7d97f3e73467f8a5bab90b577ba4c';
 
 const _deviceErrorMessages = {
-  -64303: 'Motor busy, wait for the movement to finish',
-  -64304: 'Maximum pan/tilt limit reached',
-  -64324: 'Privacy mode is on',
-  -64336: 'Movement blocked by a privacy zone',
+  -64303: 'El motor está ocupado; esperá a que termine el movimiento',
+  -64304: 'La cámara llegó al límite de movimiento',
+  -64324: 'Modo privacidad activado',
+  -64336: 'Una zona de privacidad bloquea el movimiento',
 };
 
 const _loginErrorMessages = {
-  -20601: 'Incorrect email or password',
-  -20600: 'Account not found',
+  -20601: 'Correo o contraseña incorrectos',
+  -20600: 'No existe esa cuenta',
 };
 
 class TapoException implements Exception {
@@ -53,8 +56,8 @@ class TapoException implements Exception {
 enum StreamQuality {
   hd('HD', 0),
   low(
-    String.fromEnvironment('TOPO_LOW_RESOLUTION', defaultValue: 'VGA'),
-    int.fromEnvironment('TOPO_LOW_STREAM_TYPE'),
+    String.fromEnvironment('MATAPO_LOW_RESOLUTION', defaultValue: 'VGA'),
+    int.fromEnvironment('MATAPO_LOW_STREAM_TYPE'),
   );
 
   const StreamQuality(this.resolution, this.streamType);
@@ -108,7 +111,7 @@ Map<String, dynamic> resultOf(Map<String, dynamic> response) {
 
 String _describe(String what, int code) {
   final known = _loginErrorMessages[code];
-  return known != null ? '$known ($code)' : '$what (code $code)';
+  return known != null ? '$known ($code)' : '$what (código $code)';
 }
 
 /// Result of [TapoCloud.login]: either a token or a pending MFA challenge.
@@ -206,13 +209,13 @@ class TapoCloud {
       request.add(body);
       response = await request.close().timeout(const Duration(seconds: 30));
     } on SocketException catch (e) {
-      throw TapoException('Network error: ${e.osError?.message ?? e.message}');
+      throw TapoException('Error de red: ${e.osError?.message ?? e.message}');
     } on HandshakeException catch (e) {
-      throw TapoException('Secure connection failed: ${e.message}');
+      throw TapoException('Falló la conexión segura: ${e.message}');
     } on TimeoutException {
-      throw TapoException('The Tapo cloud did not answer in time');
+      throw TapoException('La nube de Tapo no respondió a tiempo');
     } on HttpException catch (e) {
-      throw TapoException('Network error: ${e.message}');
+      throw TapoException('Error de red: ${e.message}');
     }
     final raw = await response.fold<BytesBuilder>(
       BytesBuilder(copy: false),
@@ -226,9 +229,9 @@ class TapoCloud {
     }
     if (decoded is! Map<String, dynamic>) {
       if (response.statusCode >= 400) {
-        throw TapoException('Cloud rejected the request (HTTP ${response.statusCode})');
+        throw TapoException('La nube rechazó el pedido (HTTP ${response.statusCode})');
       }
-      throw TapoException('Unexpected answer from the Tapo cloud');
+      throw TapoException('Respuesta inesperada de la nube de Tapo');
     }
     return (response.statusCode, decoded);
   }
@@ -283,12 +286,12 @@ class TapoCloud {
     );
     final code = errorCode(response);
     if (code != 0) {
-      throw TapoException('Service discovery rejected (code $code)', code: code);
+      throw TapoException('La nube rechazó la búsqueda de servicios (código $code)', code: code);
     }
     final services = resultOf(response)['serviceUrls'];
     final url = services is Map ? services[serviceId] : null;
     if (url == null || '$url'.isEmpty) {
-      throw TapoException('$serviceId endpoint missing from cloud response');
+      throw TapoException('Falta el servicio $serviceId en la respuesta de la nube');
     }
     return '$url'.replaceFirst('http://', 'https://');
   }
@@ -310,7 +313,7 @@ class TapoCloud {
         'refreshTokenNeeded': false,
         'supportBindAccount': false,
         'terminalMeta': '1',
-        'terminalName': '$productName - Android TV',
+        'terminalName': terminalName,
         'terminalUUID': terminalUuid,
       };
 
@@ -318,20 +321,20 @@ class TapoCloud {
     final payload = _loginPayload(username, password);
     var response = await post(loginUrl, '/api/v2/account/login', payload, withToken: false);
     var code = errorCode(response);
-    if (code != 0) throw TapoException(_describe('Login rejected', code), code: code);
+    if (code != 0) throw TapoException(_describe('Inicio de sesión rechazado', code), code: code);
     var result = resultOf(response);
     // Accounts outside the global region are redirected to a regional URL.
     if (errorCode(result) == -20212 && result['appServerUrl'] != null) {
       final regional = '${result['appServerUrl']}';
       response = await post(regional, '/api/v2/account/login', payload, withToken: false);
       code = errorCode(response);
-      if (code != 0) throw TapoException(_describe('Login rejected', code), code: code);
+      if (code != 0) throw TapoException(_describe('Inicio de sesión rechazado', code), code: code);
       result = resultOf(response);
       return LoginResult(regional, result);
     }
     final inner = errorCode(result);
     if (inner != 0 && result['MFAProcessId'] == null) {
-      throw TapoException(_describe('Login rejected', inner), code: inner);
+      throw TapoException(_describe('Inicio de sesión rechazado', inner), code: inner);
     }
     return LoginResult(loginUrl, result);
   }
@@ -355,7 +358,7 @@ class TapoCloud {
     final outer = errorCode(sent), inner = errorCode(resultOf(sent));
     if (outer != 0 || inner != 0) {
       final code = inner != 0 ? inner : outer;
-      throw TapoException(_describe('Could not send the verification code', code), code: code);
+      throw TapoException(_describe('No se pudo enviar el código de verificación', code), code: code);
     }
   }
 
@@ -382,7 +385,7 @@ class TapoCloud {
     final outer = errorCode(checked), inner = errorCode(resultOf(checked));
     if (outer != 0 || inner != 0) {
       final c = inner != 0 ? inner : outer;
-      throw TapoException(_describe('Verification code rejected', c), code: c);
+      throw TapoException(_describe('Código de verificación incorrecto', c), code: c);
     }
     return resultOf(checked);
   }
@@ -404,7 +407,7 @@ class TapoCloud {
       );
       final code = errorCode(response);
       if (code != 0) {
-        throw TapoException('Could not load cameras (code $code)', code: code);
+        throw TapoException('No se pudieron cargar las cámaras (código $code)', code: code);
       }
       final page = resultOf(response)['deviceList'];
       if (page is! List) break;
@@ -462,24 +465,24 @@ class TapoCloud {
     }
     final output = decoded['outputParams'];
     final data = output is Map ? output['responseData'] : null;
-    if (data is! Map) throw TapoException('Camera did not answer');
+    if (data is! Map) throw TapoException('La cámara no respondió');
     final code = errorCode(data);
     if (code != 0) {
-      throw TapoException(_deviceErrorMessages[code] ?? 'Camera control rejected (code $code)', code: code);
+      throw TapoException(_deviceErrorMessages[code] ?? 'La cámara rechazó la orden (código $code)', code: code);
     }
     final responses = (data['result'] is Map) ? data['result']['responses'] : null;
-    if (responses is! List) throw TapoException('Camera returned no answer');
+    if (responses is! List) throw TapoException('La cámara no devolvió respuesta');
     return responses;
   }
 
   Map<String, dynamic> _firstResponse(List<dynamic> responses, String method) {
     if (responses.isEmpty || responses.first is! Map) {
-      throw TapoException('Incomplete $method response');
+      throw TapoException('Respuesta incompleta de $method');
     }
     final response = Map<String, dynamic>.from(responses.first as Map);
     final code = errorCode(response);
     if (code != 0) {
-      throw TapoException(_deviceErrorMessages[code] ?? '$method rejected by camera (code $code)', code: code);
+      throw TapoException(_deviceErrorMessages[code] ?? 'La cámara rechazó $method (código $code)', code: code);
     }
     return response;
   }
@@ -500,7 +503,7 @@ class TapoCloud {
     final info = lensMask is Map ? lensMask['lens_mask_info'] : null;
     final enabled = info is Map ? info['enabled'] : null;
     if (enabled != 'on' && enabled != 'off') {
-      throw TapoException('Privacy state missing from camera answer');
+      throw TapoException('La cámara no informó el estado de privacidad');
     }
     return enabled == 'on';
   }
@@ -529,7 +532,7 @@ class TapoCloud {
       }
     }
     if (lastError != null) throw lastError;
-    throw TapoException('Privacy mode did not change, try again');
+    throw TapoException('El modo privacidad no cambió; probá de nuevo');
   }
 
   Future<bool> ptzSupported(String baseUrl, String deviceId) async {
@@ -553,7 +556,7 @@ class TapoCloud {
   /// Relative pan/tilt step; x>0 pans right, y>0 tilts up.
   Future<void> moveMotor(String baseUrl, String deviceId, int x, int y) async {
     if (x.abs() > 200 || y.abs() > 200) {
-      throw TapoException('Movement must be between -200 and 200');
+      throw TapoException('El movimiento tiene que estar entre -200 y 200');
     }
     final responses = await servicesSync(baseUrl, deviceId, [
       {
@@ -576,7 +579,7 @@ class TapoCloud {
     StreamQuality quality = StreamQuality.hd,
   }) async {
     final deviceId = '${device['deviceId'] ?? ''}';
-    if (deviceId.isEmpty) throw TapoException('Camera has no deviceId');
+    if (deviceId.isEmpty) throw TapoException('La cámara no tiene identificador');
     await _ensureCipc(baseUrl);
     final playerId = randomUuid();
     final response = await postCipc('/v2/relay/request', {
@@ -595,15 +598,15 @@ class TapoCloud {
     if (code != 0) {
       throw TapoException(
         code == -40401 || code == -40406
-            ? 'Camera is offline'
-            : 'Cloud relay rejected the stream (code $code)',
+            ? 'La cámara está desconectada'
+            : 'El relay de la nube rechazó el video (código $code)',
         code: code,
       );
     }
     final relayUrl = '${info['relayUrl'] ?? ''}';
     final relayToken = '${info['relayToken'] ?? info['sessionToken'] ?? ''}';
     if (relayUrl.isEmpty || relayToken.isEmpty) {
-      throw TapoException('Incomplete relay answer from the cloud');
+      throw TapoException('Respuesta incompleta del relay de la nube');
     }
     // The relay query is an opaque signed string: keep it byte-for-byte.
     final full = relayUrl.contains('://') ? relayUrl : 'https://$relayUrl';
@@ -666,7 +669,7 @@ class TapoCloud {
         timeout: const Duration(seconds: 15),
       );
     } on SocketException catch (e) {
-      throw TapoException('Could not reach the video relay: ${e.message}');
+      throw TapoException('No se pudo llegar al relay de video: ${e.message}');
     }
     try {
       socket.add(ascii.encode(request.toString()));
@@ -686,7 +689,7 @@ Stream<Uint8List> parseRelayResponse(Stream<Uint8List> source) async* {
   try {
     final status = await reader.readHttpHeaders();
     if (!status.startsWith('HTTP/1.1 200')) {
-      throw TapoException('Video relay refused the connection');
+      throw TapoException('El relay de video rechazó la conexión');
     }
     while (true) {
       final line = await reader.readLine();
@@ -703,7 +706,7 @@ Stream<Uint8List> parseRelayResponse(Stream<Uint8List> source) async* {
         }
       }
       if (partHeaders['x-if-encrypt'] == '1') {
-        throw TapoException('This camera sends encrypted video, which is not supported yet');
+        throw TapoException('Esta cámara envía video cifrado, que todavía no está soportado');
       }
       final length = int.tryParse(partHeaders['content-length'] ?? '0') ?? 0;
       if (length <= 0) continue;
@@ -728,9 +731,9 @@ class _ByteReader {
   Future<void> _fill() async {
     final hasMore = await _it.moveNext().timeout(
           _timeout,
-          onTimeout: () => throw TapoException('Camera stopped sending video'),
+          onTimeout: () => throw TapoException('La cámara dejó de enviar video'),
         );
-    if (!hasMore) throw TapoException('Video relay closed the connection');
+    if (!hasMore) throw TapoException('El relay de video cerró la conexión');
     final chunk = _it.current;
     if (_available == 0) {
       _buf = chunk;
@@ -759,7 +762,7 @@ class _ByteReader {
         _pos = idx + 2;
         return line;
       }
-      if (_available > 65536) throw TapoException('Malformed video relay data');
+      if (_available > 65536) throw TapoException('Datos de video dañados');
       final consumed = _pos;
       final scanned = max(_buf.length - 1, _pos);
       await _fill();

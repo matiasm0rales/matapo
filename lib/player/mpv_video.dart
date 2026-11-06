@@ -22,6 +22,15 @@ class MpvVideo extends StatefulWidget {
 
   @override
   State<MpvVideo> createState() => _MpvVideoState();
+
+  /// Shuts down every libmpv player before the app quits.
+  ///
+  /// Otherwise mpv's core thread keeps calling into Dart while Flutter tears
+  /// the engine down, and the app crashes on the way out (SIGABRT in
+  /// `DLRT_GetFfiCallbackMetadata`, called from
+  /// `mp_client_send_property_changes`). Disposing clears that callback and
+  /// destroys the mpv handle first.
+  static Future<void> disposeAll() => _MpvVideoState.disposeAll();
 }
 
 class _MpvVideoState extends State<MpvVideo> {
@@ -38,6 +47,11 @@ class _MpvVideoState extends State<MpvVideo> {
     ('cache-pause', 'no'),
     ('demuxer-lavf-o', 'fflags=+nobuffer'),
     ('demuxer-lavf-analyzeduration', '1'),
+    // Tapo relays carry a second, unidentified stream (type 0x90) whose
+    // parameters ffmpeg never finds, so it reads up to the default 5 MB
+    // before starting: about two minutes at a camera's bitrate. 64 KB is
+    // enough to find the H.264 stream in about 2 s.
+    ('demuxer-lavf-probesize', '65536'),
     ('video-latency-hacks', 'yes'),
     ('aid', 'no'),
     ('network-timeout', '30'),
@@ -46,6 +60,15 @@ class _MpvVideoState extends State<MpvVideo> {
   /// Players on screen. The Mac doesn't sleep or start the screensaver while
   /// any is open, since it's used as an unattended camera monitor.
   static int _awake = 0;
+
+  /// Every player that hasn't been disposed yet, for [disposeAll].
+  static final _live = <Player>{};
+
+  static Future<void> disposeAll() async {
+    final players = _live.toList();
+    _live.clear();
+    await Future.wait(players.map((p) => p.dispose().catchError((Object _) {})));
+  }
 
   late final Player _player;
   late final VideoController _controller;
@@ -69,6 +92,7 @@ class _MpvVideoState extends State<MpvVideo> {
     _player = Player(
       configuration: const PlayerConfiguration(muted: true, bufferSize: 4 * 1024 * 1024),
     );
+    _live.add(_player);
     _controller = VideoController(_player);
     _subscriptions
       ..add(_player.stream.error.listen(_onError))
@@ -143,7 +167,7 @@ class _MpvVideoState extends State<MpvVideo> {
       _lastPosition = position;
       _lastMovedAt = now;
     } else if (now.difference(_lastMovedAt) > _stallAfter) {
-      debugPrint('TopoPlayer: no new frame for ${_stallAfter.inSeconds} s, reconnecting');
+      debugPrint('MatapoPlayer: no new frame for ${_stallAfter.inSeconds} s, reconnecting');
       _fail('Video stopped');
     }
   }
@@ -199,7 +223,7 @@ class _MpvVideoState extends State<MpvVideo> {
     for (final s in _subscriptions) {
       s.cancel();
     }
-    _player.dispose();
+    if (_live.remove(_player)) _player.dispose();
     if (--_awake == 0) WakelockPlus.disable().ignore();
     super.dispose();
   }

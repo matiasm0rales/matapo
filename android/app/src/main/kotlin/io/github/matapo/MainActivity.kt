@@ -1,4 +1,4 @@
-package io.github.topo.topo_tv
+package io.github.matapo
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -8,7 +8,7 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "topo/player")
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "matapo/player")
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 // Where the player saves last-frame snapshots (app cache).
@@ -17,6 +17,6 @@ class MainActivity : FlutterActivity() {
             }
         }
         flutterEngine.platformViewsController.registry
-            .registerViewFactory("topo/live-video", LiveVideoViewFactory(channel))
+            .registerViewFactory("matapo/live-video", LiveVideoViewFactory(channel))
     }
 }

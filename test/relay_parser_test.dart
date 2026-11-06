@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:topo_tv/api/tapo_cloud.dart';
+import 'package:matapo/api/tapo_cloud.dart';
 
 Uint8List _part(List<int> payload, {String extra = ''}) => Uint8List.fromList([
       ...ascii.encode('----device-stream-boundary--\r\n'
@@ -57,7 +57,7 @@ void main() {
     final wire = [...head, ..._part([1, 2, 3], extra: 'X-If-Encrypt: 1\r\n')];
     expect(
       parseRelayResponse(_chunked(wire, 0)).toList(),
-      throwsA(predicate((e) => e is TapoException && e.message.contains('encrypted'))),
+      throwsA(predicate((e) => e is TapoException && e.message.contains('cifrado'))),
     );
   });
 }

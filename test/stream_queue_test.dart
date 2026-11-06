@@ -1,6 +1,6 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:topo_tv/player/stream_queue.dart';
+import 'package:matapo/player/stream_queue.dart';
 
 void main() {
   test('streams start one at a time, in order', () {

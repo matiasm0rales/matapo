@@ -113,7 +113,7 @@ class LiveVideoState extends State<LiveVideo> {
     final started = _firstAttemptAt ??= DateTime.now();
     final left = giveUpAfter - DateTime.now().difference(started);
     _stallTimer = Timer(left.isNegative ? Duration.zero : left, () {
-      if (_state != LiveState.playing) _giveUp("The camera didn't respond in time");
+      if (_state != LiveState.playing) _giveUp('La cámara no respondió a tiempo');
     });
     setState(() => _session = ++_sessions);
   }
@@ -139,7 +139,7 @@ class LiveVideoState extends State<LiveVideo> {
         Snapshots.instance.updated(widget.camera.deviceId);
       case 'error':
         final relayError = widget.app.relay.lastErrors[widget.camera.deviceId];
-        _onFailure(relayError ?? '${event['message'] ?? 'Stream interrupted'}');
+        _onFailure(relayError ?? '${event['message'] ?? 'Se cortó la transmisión'}');
     }
   }
 
@@ -208,7 +208,7 @@ class LiveVideoState extends State<LiveVideo> {
   Widget build(BuildContext context) {
     final session = _session;
     return ColoredBox(
-      color: TopoColors.media,
+      color: MatapoColors.media,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -243,10 +243,10 @@ class LiveVideoState extends State<LiveVideo> {
     final compact = widget.compact;
     final failed = _state == LiveState.failed;
     final text = switch (_state) {
-      _ when _waiting => compact ? 'Waiting' : 'Waiting for other cameras to load…',
-      LiveState.connecting => compact ? 'Connecting' : 'Connecting to camera through Tapo cloud…',
-      LiveState.retrying => 'Reconnecting…',
-      LiveState.failed => compact ? 'Not responding' : "The camera didn't respond",
+      _ when _waiting => compact ? 'En espera' : 'Esperando a que carguen las otras cámaras…',
+      LiveState.connecting => compact ? 'Conectando' : 'Conectando con la cámara por la nube de Tapo…',
+      LiveState.retrying => 'Reconectando…',
+      LiveState.failed => compact ? 'No responde' : 'La cámara no respondió',
       LiveState.playing => '',
     };
     const soft = Color(0xFFC9D3DC);
@@ -259,13 +259,13 @@ class LiveVideoState extends State<LiveVideo> {
           SizedBox(
             width: compact ? 22 : 36,
             height: compact ? 22 : 36,
-            child: const CircularProgressIndicator(strokeWidth: 3, color: TopoColors.onMedia),
+            child: const CircularProgressIndicator(strokeWidth: 3, color: MatapoColors.onMedia),
           ),
         SizedBox(height: compact ? 8 : 16),
         Text(
           text,
           textAlign: TextAlign.center,
-          style: TextStyle(color: TopoColors.onMedia, fontSize: compact ? 16 : 22, fontWeight: FontWeight.w600),
+          style: TextStyle(color: MatapoColors.onMedia, fontSize: compact ? 16 : 22, fontWeight: FontWeight.w600),
         ),
         if (failed) ...[
           SizedBox(height: compact ? 10 : 18),
@@ -275,8 +275,8 @@ class LiveVideoState extends State<LiveVideo> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 20, vertical: compact ? 6 : 10),
               decoration: BoxDecoration(
-                color: TopoColors.primaryAction,
-                borderRadius: BorderRadius.circular(TopoRadius.full),
+                color: MatapoColors.primaryAction,
+                borderRadius: BorderRadius.circular(MatapoRadius.full),
                 border: Border.all(color: Colors.white, width: 2),
               ),
               child: Row(
@@ -285,8 +285,8 @@ class LiveVideoState extends State<LiveVideo> {
                   const KeyCap('OK', onMedia: true),
                   const SizedBox(width: 8),
                   Text(
-                    'Retry',
-                    style: TextStyle(color: TopoColors.onMedia, fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
+                    'Reintentar',
+                    style: TextStyle(color: MatapoColors.onMedia, fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -313,7 +313,7 @@ class LiveVideoState extends State<LiveVideo> {
       fit: StackFit.expand,
       children: [
         ColoredBox(
-          color: TopoColors.media,
+          color: MatapoColors.media,
           child: SnapshotView(
             deviceId: widget.camera.deviceId,
             fit: compact ? BoxFit.cover : BoxFit.contain,
@@ -328,8 +328,8 @@ class LiveVideoState extends State<LiveVideo> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: TopoColors.media.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(TopoRadius.sm),
+                color: MatapoColors.media.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(MatapoRadius.sm),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -337,12 +337,12 @@ class LiveVideoState extends State<LiveVideo> {
                   const SizedBox(
                       width: 12,
                       height: 12,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: TopoColors.onMedia),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: MatapoColors.onMedia),
                     ),
                   const SizedBox(width: 6),
                   Text(
                     text,
-                    style: const TextStyle(color: TopoColors.onMedia, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: const TextStyle(color: MatapoColors.onMedia, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -350,7 +350,7 @@ class LiveVideoState extends State<LiveVideo> {
           )
         else
           Container(
-            color: TopoColors.media.withValues(alpha: taken != null ? 0.55 : 0.85),
+            color: MatapoColors.media.withValues(alpha: taken != null ? 0.55 : 0.85),
             alignment: Alignment.center,
             padding: const EdgeInsets.all(12),
             child: taken == null
@@ -358,8 +358,8 @@ class LiveVideoState extends State<LiveVideo> {
                 : Container(
                     padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                     decoration: BoxDecoration(
-                      color: TopoColors.media.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(TopoRadius.lg),
+                      color: MatapoColors.media.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(MatapoRadius.lg),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -367,7 +367,7 @@ class LiveVideoState extends State<LiveVideo> {
                         status,
                         if (!compact) ...[
                           const SizedBox(height: 8),
-                          Text('Showing the last picture from $taken', style: const TextStyle(color: soft, fontSize: 15)),
+                          Text('Mostrando la última imagen de las $taken', style: const TextStyle(color: soft, fontSize: 15)),
                         ],
                       ],
                     ),

@@ -1,9 +1,13 @@
 import 'dart:io' show Platform;
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
+import 'debug/stress_screen.dart';
+import 'desktop/desktop_app.dart';
+import 'player/mpv_video.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'state/app_state.dart';
@@ -15,10 +19,30 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Live video on macOS uses libmpv (lib/player/mpv_video.dart).
   if (Platform.isMacOS) MediaKit.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   final app = AppState()..init();
-  runApp(TopoTvApp(app: app));
+  if (Platform.isMacOS) {
+    // A real desktop app: sidebar, mouse, menus and text fields.
+    runApp(MatapoDesktopApp(app: app));
+    return;
+  }
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  runApp(MatapoApp(app: app));
 }
+
+/// On a Mac, shut every video player down before the engine goes away;
+/// see [MpvVideo.disposeAll]. Never blocks quitting for long.
+Future<AppExitResponse> onAppExitRequested() async {
+  if (Platform.isMacOS) {
+    await MpvVideo.disposeAll().timeout(const Duration(seconds: 3), onTimeout: () {});
+  }
+  return AppExitResponse.exit;
+}
+
+/// Whether streams should run. On a Mac the window stays on screen while
+/// the user works in another app ("inactive"), so cameras keep playing
+/// as on a monitor; Android TV stops them when the app leaves.
+bool showsVideo(AppLifecycleState state) =>
+    state == AppLifecycleState.resumed || (Platform.isMacOS && state == AppLifecycleState.inactive);
 
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState app, required super.child}) : super(notifier: app);
@@ -32,15 +56,15 @@ final guideSection = ValueNotifier(GuideSection.basics);
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
-class TopoTvApp extends StatefulWidget {
-  const TopoTvApp({super.key, required this.app});
+class MatapoApp extends StatefulWidget {
+  const MatapoApp({super.key, required this.app});
   final AppState app;
 
   @override
-  State<TopoTvApp> createState() => _TopoTvAppState();
+  State<MatapoApp> createState() => _MatapoAppState();
 }
 
-class _TopoTvAppState extends State<TopoTvApp> {
+class _MatapoAppState extends State<MatapoApp> {
   bool _guideOpen = false;
   late final AppLifecycleListener _lifecycle;
 
@@ -48,15 +72,9 @@ class _TopoTvAppState extends State<TopoTvApp> {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(
-      onStateChange: (state) => widget.app.setForeground(_showsVideo(state)),
+      onStateChange: (state) => widget.app.setForeground(showsVideo(state)),
     );
   }
-
-  /// Whether streams should run. On a Mac the window stays on screen while
-  /// the user works in another app ("inactive"), so cameras keep playing
-  /// as on a monitor; only Android TV stops them when the app leaves.
-  static bool _showsVideo(AppLifecycleState state) =>
-      state == AppLifecycleState.resumed || (Platform.isMacOS && state == AppLifecycleState.inactive);
 
   @override
   void dispose() {
@@ -65,8 +83,8 @@ class _TopoTvAppState extends State<TopoTvApp> {
   }
 
   KeyEventResult _globalKeys(FocusNode node, KeyEvent event) {
-    // A Mac keyboard has no Back key: Escape does the same, so PopScope on
-    // each screen still decides (hide controls first, then leave).
+    // A keyboard has no Back key: Escape does the same, so PopScope on each
+    // screen still decides (hide controls first, then leave).
     if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
       navigatorKey.currentState?.maybePop();
       return KeyEventResult.handled;
@@ -84,7 +102,7 @@ class _TopoTvAppState extends State<TopoTvApp> {
     return AppScope(
       app: widget.app,
       child: MaterialApp(
-        title: 'Tapo',
+        title: 'Matapo',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
         navigatorKey: navigatorKey,
@@ -115,6 +133,7 @@ class _Root extends StatelessWidget {
       AuthStage.starting => const _Splash(),
       AuthStage.signedOut => const LoginScreen(key: ValueKey('login')),
       AuthStage.mfa => const MfaScreen(key: ValueKey('mfa')),
+      AuthStage.signedIn when StressScreen.enabled => const StressScreen(),
       AuthStage.signedIn => const HomeScreen(key: ValueKey('home')),
     };
     return AnimatedSwitcher(duration: const Duration(milliseconds: 300), child: screen);
@@ -131,17 +150,17 @@ class _Splash extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/topo.png', width: 120, height: 120),
+            Image.asset('assets/matapo.png', width: 120, height: 120),
             const SizedBox(height: 20),
-            const Text('Tapo', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: TopoColors.onSurface)),
+            const Text('Matapo', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: MatapoColors.onSurface)),
             const SizedBox(height: 24),
             const SizedBox(
               width: 28,
               height: 28,
-              child: CircularProgressIndicator(strokeWidth: 3, color: TopoColors.primaryAction),
+              child: CircularProgressIndicator(strokeWidth: 3, color: MatapoColors.primaryAction),
             ),
             const SizedBox(height: 14),
-            const Text('Connecting to your Tapo account…', style: TextStyle(color: TopoColors.muted, fontSize: 15)),
+            const Text('Conectando con tu cuenta de Tapo…', style: TextStyle(color: MatapoColors.muted, fontSize: 15)),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-package io.github.topo.topo_tv
+package io.github.matapo
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -126,7 +126,7 @@ private class LiveVideoView(
             if (released || failed) return
             val last = lastFrameAtMs
             if (last != 0L && SystemClock.elapsedRealtime() - last > STALL_AFTER_MS) {
-                Log.w("TopoPlayer", "no new frame for ${STALL_AFTER_MS / 1000} s, reconnecting")
+                Log.w("MatapoPlayer", "no new frame for ${STALL_AFTER_MS / 1000} s, reconnecting")
                 fail("Video stopped")
                 return
             }
@@ -193,7 +193,7 @@ private class LiveVideoView(
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 if (videoSize.width <= 0 || videoSize.height <= 0) return
-                Log.i("TopoPlayer", "video size ${videoSize.width}x${videoSize.height}")
+                Log.i("MatapoPlayer", "video size ${videoSize.width}x${videoSize.height}")
                 emit(
                     mapOf(
                         "state" to "size",

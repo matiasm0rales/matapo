@@ -69,7 +69,7 @@ class Snapshots extends ChangeNotifier {
 
   Future<void> init() async {
     try {
-      _dir ??= await const MethodChannel('topo/player').invokeMethod<String>('snapshotDir');
+      _dir ??= await const MethodChannel('matapo/player').invokeMethod<String>('snapshotDir');
     } catch (_) {
       // No snapshots (e.g. in tests); everything still works without them.
     }
@@ -137,6 +137,6 @@ String? snapshotTime(String deviceId) {
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(t.year, t.month, t.day);
   if (day == today) return hm;
-  if (today.difference(day).inDays == 1) return 'Yesterday $hm';
+  if (today.difference(day).inDays == 1) return 'Ayer $hm';
   return '${t.day}/${t.month} $hm';
 }

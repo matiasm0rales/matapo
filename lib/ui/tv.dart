@@ -100,8 +100,8 @@ class _TvFocusableState extends State<TvFocusable> {
           Scrollable.ensureVisible(
             context,
             alignment: 0.5,
-            duration: TopoMotion.navigation,
-            curve: TopoMotion.curve,
+            duration: MatapoMotion.navigation,
+            curve: MatapoMotion.curve,
           );
         }
         widget.onFocusChange?.call(focused);
@@ -124,7 +124,7 @@ class FocusRing extends StatelessWidget {
     super.key,
     required this.focused,
     required this.child,
-    this.radius = TopoRadius.lg,
+    this.radius = MatapoRadius.lg,
     this.onMedia = false,
     this.scale = true,
   });
@@ -137,12 +137,12 @@ class FocusRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const gap = TopoSpace.focusGap, width = TopoSpace.focusWidth;
+    const gap = MatapoSpace.focusGap, width = MatapoSpace.focusWidth;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return AnimatedScale(
       scale: focused && scale && !reduceMotion ? 1.04 : 1.0,
-      duration: TopoMotion.focus,
-      curve: TopoMotion.curve,
+      duration: MatapoMotion.focus,
+      curve: MatapoMotion.curve,
       child: Stack(
         clipBehavior: Clip.none,
         fit: StackFit.passthrough,
@@ -157,14 +157,14 @@ class FocusRing extends StatelessWidget {
               child: IgnorePointer(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius >= TopoRadius.full ? radius : radius + gap + width),
-                    border: Border.all(color: TopoColors.primaryPressed, width: width),
+                    borderRadius: BorderRadius.circular(radius >= MatapoRadius.full ? radius : radius + gap + width),
+                    border: Border.all(color: MatapoColors.primaryPressed, width: width),
                   ),
                   padding: const EdgeInsets.all(0),
                   child: onMedia
                       ? Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(radius >= TopoRadius.full ? radius : radius + gap),
+                            borderRadius: BorderRadius.circular(radius >= MatapoRadius.full ? radius : radius + gap),
                             border: Border.all(color: Colors.white, width: gap),
                           ),
                         )
@@ -224,22 +224,22 @@ class TvButton extends StatelessWidget {
         onSelect: busy ? () {} : onPressed,
         builder: (context, focused) {
           final (bg, fg) = disabled
-              ? (TopoColors.disabledSurface, TopoColors.disabledText)
+              ? (MatapoColors.disabledSurface, MatapoColors.disabledText)
               : switch (style) {
-                  TvButtonStyle.primary => (TopoColors.primaryAction, TopoColors.onPrimary),
-                  TvButtonStyle.secondary => (TopoColors.surfaceSelected, TopoColors.primaryPressed),
-                  TvButtonStyle.text => (focused ? TopoColors.surfaceSelected : Colors.transparent, TopoColors.primaryAction),
-                  TvButtonStyle.danger => (const Color(0xFFFBE9E8), TopoColors.error),
+                  TvButtonStyle.primary => (MatapoColors.primaryAction, MatapoColors.onPrimary),
+                  TvButtonStyle.secondary => (MatapoColors.surfaceSelected, MatapoColors.primaryPressed),
+                  TvButtonStyle.text => (focused ? MatapoColors.surfaceSelected : Colors.transparent, MatapoColors.primaryAction),
+                  TvButtonStyle.danger => (const Color(0xFFFBE9E8), MatapoColors.error),
                 };
           return FocusRing(
             focused: focused,
-            radius: TopoRadius.full,
+            radius: MatapoRadius.full,
             onMedia: onMedia,
             child: AnimatedContainer(
-              duration: TopoMotion.press,
+              duration: MatapoMotion.press,
               height: 48,
-              padding: EdgeInsets.symmetric(horizontal: label.isEmpty ? 12 : TopoSpace.x2),
-              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(TopoRadius.full)),
+              padding: EdgeInsets.symmetric(horizontal: label.isEmpty ? 12 : MatapoSpace.x2),
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(MatapoRadius.full)),
               child: Row(
                 mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -249,10 +249,10 @@ class TvButton extends StatelessWidget {
                     SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: fg))
                   else if (icon != null)
                     Icon(icon, size: 24, color: fg),
-                  if ((icon != null || busy) && label.isNotEmpty) const SizedBox(width: TopoSpace.sm),
+                  if ((icon != null || busy) && label.isNotEmpty) const SizedBox(width: MatapoSpace.sm),
                   if (label.isNotEmpty)
                     Flexible(
-                      child: Text(label, overflow: TextOverflow.ellipsis, style: TopoText.label.copyWith(color: fg)),
+                      child: Text(label, overflow: TextOverflow.ellipsis, style: MatapoText.label.copyWith(color: fg)),
                     ),
                 ],
               ),
@@ -299,19 +299,19 @@ class TvChip extends StatelessWidget {
         onSelect: onSelect,
         onFocusChange: onFocusChange,
         builder: (context, focused) {
-          final fg = selected ? TopoColors.primaryPressed : TopoColors.muted;
+          final fg = selected ? MatapoColors.primaryPressed : MatapoColors.muted;
           return FocusRing(
             focused: focused,
-            radius: TopoRadius.full,
+            radius: MatapoRadius.full,
             onMedia: onMedia,
             child: AnimatedContainer(
-              duration: TopoMotion.press,
+              duration: MatapoMotion.press,
               height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: TopoSpace.lg),
+              padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.lg),
               decoration: BoxDecoration(
-                color: selected ? TopoColors.surfaceSelected : TopoColors.surface,
-                borderRadius: BorderRadius.circular(TopoRadius.full),
-                border: Border.all(color: selected ? TopoColors.surfaceSelected : TopoColors.outline),
+                color: selected ? MatapoColors.surfaceSelected : MatapoColors.surface,
+                borderRadius: BorderRadius.circular(MatapoRadius.full),
+                border: Border.all(color: selected ? MatapoColors.surfaceSelected : MatapoColors.outline),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -321,7 +321,7 @@ class TvChip extends StatelessWidget {
                   else if (icon != null)
                     Icon(icon, size: 20, color: fg),
                   if (selected || icon != null) const SizedBox(width: 6),
-                  Text(label, style: TopoText.label.copyWith(color: fg, fontSize: 17)),
+                  Text(label, style: MatapoText.label.copyWith(color: fg, fontSize: 17)),
                 ],
               ),
             ),
@@ -341,7 +341,7 @@ class TvCard extends StatelessWidget {
     this.onLongSelect,
     this.autofocus = false,
     this.focusNode,
-    this.padding = const EdgeInsets.all(TopoSpace.cardPadding),
+    this.padding = const EdgeInsets.all(MatapoSpace.cardPadding),
     this.selected = false,
     this.onFocusChange,
   });
@@ -366,11 +366,11 @@ class TvCard extends StatelessWidget {
       builder: (context, focused) => FocusRing(
         focused: focused,
         child: AnimatedContainer(
-          duration: TopoMotion.focus,
+          duration: MatapoMotion.focus,
           padding: padding,
           decoration: BoxDecoration(
-            color: focused || selected ? TopoColors.surfaceSelected : TopoColors.surface,
-            borderRadius: BorderRadius.circular(TopoRadius.lg),
+            color: focused || selected ? MatapoColors.surfaceSelected : MatapoColors.surface,
+            borderRadius: BorderRadius.circular(MatapoRadius.lg),
             boxShadow: cardShadow,
           ),
           child: child(focused),
@@ -407,7 +407,7 @@ class TvTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = danger ? TopoColors.error : TopoColors.primaryAction;
+    final accent = danger ? MatapoColors.error : MatapoColors.primaryAction;
     return Semantics(
       button: onSelect != null,
       selected: selected,
@@ -417,7 +417,7 @@ class TvTile extends StatelessWidget {
         focusNode: focusNode,
         onSelect: onSelect,
         selected: selected,
-        padding: const EdgeInsets.symmetric(horizontal: TopoSpace.xl, vertical: TopoSpace.md),
+        padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.xl, vertical: MatapoSpace.md),
         child: (focused) => ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 40),
           child: Row(
@@ -427,26 +427,26 @@ class TvTile extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: focused || selected ? TopoColors.surface : TopoColors.surfaceSelected,
-                    borderRadius: BorderRadius.circular(TopoRadius.md),
+                    color: focused || selected ? MatapoColors.surface : MatapoColors.surfaceSelected,
+                    borderRadius: BorderRadius.circular(MatapoRadius.md),
                   ),
                   child: Icon(icon, color: accent, size: 24),
                 ),
-                const SizedBox(width: TopoSpace.lg),
+                const SizedBox(width: MatapoSpace.lg),
               ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(title, style: TopoText.label.copyWith(color: danger ? TopoColors.error : TopoColors.onSurface)),
-                    if (subtitle != null) Text(subtitle!, style: TopoText.caption),
+                    Text(title, style: MatapoText.label.copyWith(color: danger ? MatapoColors.error : MatapoColors.onSurface)),
+                    if (subtitle != null) Text(subtitle!, style: MatapoText.caption),
                   ],
                 ),
               ),
               if (selected && trailing == null)
-                const Icon(Icons.check_circle_rounded, color: TopoColors.primaryAction, size: 26),
-              if (trailing != null) ...[const SizedBox(width: TopoSpace.lg), trailing!],
+                const Icon(Icons.check_circle_rounded, color: MatapoColors.primaryAction, size: 26),
+              if (trailing != null) ...[const SizedBox(width: MatapoSpace.lg), trailing!],
             ],
           ),
         ),
@@ -513,7 +513,7 @@ class TvTextField extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Text(label, style: TopoText.caption.copyWith(color: TopoColors.onSurface, fontWeight: FontWeight.w500)),
+            child: Text(label, style: MatapoText.caption.copyWith(color: MatapoColors.onSurface, fontWeight: FontWeight.w500)),
           ),
           TvFocusable(
             autofocus: autofocus,
@@ -521,28 +521,28 @@ class TvTextField extends StatelessWidget {
             onSelect: () => _edit(context),
             builder: (context, focused) => FocusRing(
               focused: focused,
-              radius: TopoRadius.md,
+              radius: MatapoRadius.md,
               scale: false,
               child: Container(
                 height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: TopoSpace.lg),
+                padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.lg),
                 decoration: BoxDecoration(
-                  color: TopoColors.surface,
-                  borderRadius: BorderRadius.circular(TopoRadius.md),
-                  border: Border.all(color: TopoColors.muted),
+                  color: MatapoColors.surface,
+                  borderRadius: BorderRadius.circular(MatapoRadius.md),
+                  border: Border.all(color: MatapoColors.muted),
                 ),
                 child: Row(
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: focused ? TopoColors.primaryAction : TopoColors.muted, size: 22),
-                      const SizedBox(width: TopoSpace.md),
+                      Icon(icon, color: focused ? MatapoColors.primaryAction : MatapoColors.muted, size: 22),
+                      const SizedBox(width: MatapoSpace.md),
                     ],
                     Expanded(
                       child: Text(
                         shown,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TopoText.body.copyWith(color: value.isEmpty ? TopoColors.muted : TopoColors.onSurface),
+                        style: MatapoText.body.copyWith(color: value.isEmpty ? MatapoColors.muted : MatapoColors.onSurface),
                       ),
                     ),
                     if (focused)
@@ -550,7 +550,7 @@ class TvTextField extends StatelessWidget {
                         children: [
                           const KeyCap('OK'),
                           const SizedBox(width: 6),
-                          Text('to type', style: TopoText.caption.copyWith(fontSize: 15)),
+                          Text('para escribir', style: MatapoText.caption.copyWith(fontSize: 15)),
                         ],
                       ),
                   ],
@@ -598,19 +598,19 @@ class _TextEntryDialogState extends State<_TextEntryDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: TopoColors.surface,
+      backgroundColor: MatapoColors.surface,
       // Keep the entry above the on-screen keyboard, which rises from below.
       alignment: Alignment.topCenter,
       insetPadding: const EdgeInsets.fromLTRB(120, 24, 120, 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TopoRadius.xl)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MatapoRadius.xl)),
       child: Padding(
-        padding: const EdgeInsets.all(TopoSpace.x3),
+        padding: const EdgeInsets.all(MatapoSpace.x3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.label, style: TopoText.title),
-            const SizedBox(height: TopoSpace.lg),
+            Text(widget.label, style: MatapoText.title),
+            const SizedBox(height: MatapoSpace.lg),
             // Up/Down leave the single-line field so the buttons are reachable.
             Shortcuts(
               shortcuts: const {
@@ -625,46 +625,46 @@ class _TextEntryDialogState extends State<_TextEntryDialog> {
                 autocorrect: false,
                 enableSuggestions: false,
                 textInputAction: TextInputAction.done,
-                style: TopoText.body,
+                style: MatapoText.body,
                 decoration: InputDecoration(
                   hintText: widget.hint,
-                  hintStyle: TopoText.body.copyWith(color: TopoColors.muted),
+                  hintStyle: MatapoText.body.copyWith(color: MatapoColors.muted),
                   filled: true,
-                  fillColor: TopoColors.surface,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: TopoSpace.lg, vertical: 14),
+                  fillColor: MatapoColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: MatapoSpace.lg, vertical: 14),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(TopoRadius.md),
-                    borderSide: const BorderSide(color: TopoColors.muted),
+                    borderRadius: BorderRadius.circular(MatapoRadius.md),
+                    borderSide: const BorderSide(color: MatapoColors.muted),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(TopoRadius.md),
-                    borderSide: const BorderSide(color: TopoColors.primaryPressed, width: 3),
+                    borderRadius: BorderRadius.circular(MatapoRadius.md),
+                    borderSide: const BorderSide(color: MatapoColors.primaryPressed, width: 3),
                   ),
                 ),
                 onSubmitted: (v) => Navigator.of(context).pop(v),
               ),
             ),
-            const SizedBox(height: TopoSpace.sm),
-            const Text('You can also type from the Google TV app on your phone.', style: TopoText.caption),
-            const SizedBox(height: TopoSpace.x2),
+            const SizedBox(height: MatapoSpace.sm),
+            const Text('También podés escribir desde la app Google TV de tu teléfono.', style: MatapoText.caption),
+            const SizedBox(height: MatapoSpace.x2),
             Row(
               children: [
                 TvButton(
-                  label: 'Done',
+                  label: 'Listo',
                   icon: Icons.check_rounded,
                   style: TvButtonStyle.primary,
                   onPressed: () => Navigator.of(context).pop(_controller.text),
                 ),
-                const SizedBox(width: TopoSpace.md),
+                const SizedBox(width: MatapoSpace.md),
                 if (widget.obscure) ...[
                   TvButton(
-                    label: _hidden ? 'Show' : 'Hide',
+                    label: _hidden ? 'Mostrar' : 'Ocultar',
                     icon: _hidden ? Icons.visibility_rounded : Icons.visibility_off_rounded,
                     onPressed: () => setState(() => _hidden = !_hidden),
                   ),
-                  const SizedBox(width: TopoSpace.md),
+                  const SizedBox(width: MatapoSpace.md),
                 ],
-                TvButton(label: 'Cancel', style: TvButtonStyle.text, onPressed: () => Navigator.of(context).pop()),
+                TvButton(label: 'Cancelar', style: TvButtonStyle.text, onPressed: () => Navigator.of(context).pop()),
               ],
             ),
           ],
@@ -684,13 +684,13 @@ class KeyCap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = onMedia ? TopoColors.onMedia : TopoColors.primaryPressed;
+    final fg = onMedia ? MatapoColors.onMedia : MatapoColors.primaryPressed;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: large ? 10 : 8, vertical: large ? 5 : 3),
       constraints: BoxConstraints(minWidth: large ? 36 : 28),
       decoration: BoxDecoration(
-        color: onMedia ? Colors.white.withValues(alpha: 0.16) : TopoColors.surfaceSelected,
-        borderRadius: BorderRadius.circular(TopoRadius.sm),
+        color: onMedia ? Colors.white.withValues(alpha: 0.16) : MatapoColors.surfaceSelected,
+        borderRadius: BorderRadius.circular(MatapoRadius.sm),
       ),
       child: icon != null
           ? Icon(icon, size: large ? 20 : 17, color: fg)
@@ -712,8 +712,8 @@ class HintBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: TopoSpace.x2,
-      runSpacing: TopoSpace.sm,
+      spacing: MatapoSpace.x2,
+      runSpacing: MatapoSpace.sm,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (final (key, text) in hints)
@@ -721,10 +721,10 @@ class HintBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               key,
-              const SizedBox(width: TopoSpace.sm),
+              const SizedBox(width: MatapoSpace.sm),
               Text(
                 text,
-                style: TopoText.caption.copyWith(color: onMedia ? TopoColors.onMedia : TopoColors.muted),
+                style: MatapoText.caption.copyWith(color: onMedia ? MatapoColors.onMedia : MatapoColors.muted),
               ),
             ],
           ),
@@ -781,7 +781,7 @@ class _ToastState extends State<_Toast> {
     _timer = Timer(const Duration(milliseconds: 3200), () {
       if (!mounted) return;
       setState(() => _visible = false);
-      _timer = Timer(TopoMotion.navigation, widget.onDone);
+      _timer = Timer(MatapoMotion.navigation, widget.onDone);
     });
   }
 
@@ -793,32 +793,32 @@ class _ToastState extends State<_Toast> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.error ? TopoColors.error : TopoColors.success;
+    final color = widget.error ? MatapoColors.error : MatapoColors.success;
     return Positioned(
       top: 27,
       right: 48,
       child: IgnorePointer(
         child: AnimatedOpacity(
           opacity: _visible ? 1 : 0,
-          duration: TopoMotion.navigation,
+          duration: MatapoMotion.navigation,
           child: Material(
             color: Colors.transparent,
             child: Semantics(
               liveRegion: true,
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 440),
-                padding: const EdgeInsets.symmetric(horizontal: TopoSpace.xl, vertical: TopoSpace.md),
+                padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.xl, vertical: MatapoSpace.md),
                 decoration: BoxDecoration(
-                  color: TopoColors.surface,
-                  borderRadius: BorderRadius.circular(TopoRadius.lg),
+                  color: MatapoColors.surface,
+                  borderRadius: BorderRadius.circular(MatapoRadius.lg),
                   boxShadow: const [BoxShadow(color: Color(0x2910486E), blurRadius: 20, offset: Offset(0, 6))],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(widget.icon, color: color),
-                    const SizedBox(width: TopoSpace.md),
-                    Flexible(child: Text(widget.message, style: TopoText.body.copyWith(color: color, height: 1.3))),
+                    const SizedBox(width: MatapoSpace.md),
+                    Flexible(child: Text(widget.message, style: MatapoText.body.copyWith(color: color, height: 1.3))),
                   ],
                 ),
               ),
@@ -841,22 +841,22 @@ class TvDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: TopoColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(TopoRadius.xl)),
+      backgroundColor: MatapoColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MatapoRadius.xl)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(TopoSpace.x3),
+          padding: const EdgeInsets.all(MatapoSpace.x3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(title, style: TopoText.headline),
+              Text(title, style: MatapoText.headline),
               if (message != null) ...[
-                const SizedBox(height: TopoSpace.sm),
-                Text(message!, style: TopoText.body.copyWith(color: TopoColors.muted)),
+                const SizedBox(height: MatapoSpace.sm),
+                Text(message!, style: MatapoText.body.copyWith(color: MatapoColors.muted)),
               ],
-              const SizedBox(height: TopoSpace.x2),
+              const SizedBox(height: MatapoSpace.x2),
               ...children,
             ],
           ),
@@ -885,8 +885,8 @@ Future<bool> confirmDialog(
       children: [
         Row(
           children: [
-            TvButton(label: 'Cancel', autofocus: true, onPressed: () => Navigator.pop(context, false)),
-            const SizedBox(width: TopoSpace.md),
+            TvButton(label: 'Cancelar', autofocus: true, onPressed: () => Navigator.pop(context, false)),
+            const SizedBox(width: MatapoSpace.md),
             TvButton(
               label: confirmLabel,
               style: danger ? TvButtonStyle.danger : TvButtonStyle.primary,

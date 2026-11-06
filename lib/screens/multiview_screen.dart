@@ -30,7 +30,7 @@ Future<void> openGrid(BuildContext context, String gridId) async {
   final previous = guideSection.value;
   await Navigator.of(context).push(
     PageRouteBuilder<void>(
-      transitionDuration: TopoMotion.navigation,
+      transitionDuration: MatapoMotion.navigation,
       pageBuilder: (_, _, _) => GridViewScreen(gridId: gridId),
       transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
     ),
@@ -49,17 +49,17 @@ Future<String?> pickCamera(BuildContext context, {required int slot, String? cur
   return showTvDialog<String>(
     context,
     (context) => TvDialog(
-      title: 'Camera for tile ${slot + 1}',
+      title: 'Cámara para la celda ${slot + 1}',
       children: [
         TvTile(
-          title: 'Empty tile',
+          title: 'Celda vacía',
           icon: Icons.crop_square_rounded,
           selected: current == null,
           autofocus: current == null,
           onSelect: () => Navigator.pop(context, ''),
         ),
         for (final camera in app.cameras) ...[
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           TvTile(
             title: camera.name,
             subtitle: camera.model,
@@ -87,38 +87,38 @@ class MultiviewPanel extends StatelessWidget {
       context,
       (context) => TvDialog(
         title: grid.name,
-        message: '${grid.cameraCount} cameras · ${grid.layout.label}',
+        message: '${grid.cameraCount} cámaras · ${grid.layout.label}',
         children: [
           TvTile(
-            title: 'Watch',
+            title: 'Ver',
             icon: Icons.play_arrow_rounded,
             autofocus: true,
             onSelect: () => Navigator.pop(context, 'open'),
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           TvTile(
-            title: app.favoriteGridId == grid.id ? 'Remove from home' : 'Pin to home',
+            title: app.favoriteGridId == grid.id ? 'Quitar del inicio' : 'Fijar en el inicio',
             subtitle: app.favoriteGridId == grid.id
-                ? 'This is your favourite grid on the home page'
-                : 'Show this grid at the top of the home page',
+                ? 'Es tu grilla favorita del inicio'
+                : 'Mostrar esta grilla arriba en el inicio',
             icon: app.favoriteGridId == grid.id ? Icons.star_outline_rounded : Icons.star_rounded,
             onSelect: () => Navigator.pop(context, 'favorite'),
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           if (grid.isAuto)
             TvTile(
-              title: 'Save a copy to customise',
-              subtitle: 'All cameras updates by itself and cannot be edited',
+              title: 'Guardar una copia para personalizarla',
+              subtitle: 'Todas las cámaras se actualiza sola y no se puede editar',
               icon: Icons.copy_rounded,
               onSelect: () => Navigator.pop(context, 'copy'),
             )
           else ...[
-            TvTile(title: 'Edit', icon: Icons.edit_rounded, onSelect: () => Navigator.pop(context, 'edit')),
-            const SizedBox(height: TopoSpace.md),
-            TvTile(title: 'Duplicate', icon: Icons.copy_rounded, onSelect: () => Navigator.pop(context, 'copy')),
-            const SizedBox(height: TopoSpace.md),
+            TvTile(title: 'Editar', icon: Icons.edit_rounded, onSelect: () => Navigator.pop(context, 'edit')),
+            const SizedBox(height: MatapoSpace.md),
+            TvTile(title: 'Duplicar', icon: Icons.copy_rounded, onSelect: () => Navigator.pop(context, 'copy')),
+            const SizedBox(height: MatapoSpace.md),
             TvTile(
-              title: 'Delete',
+              title: 'Eliminar',
               icon: Icons.delete_rounded,
               danger: true,
               onSelect: () => Navigator.pop(context, 'delete'),
@@ -134,22 +134,22 @@ class MultiviewPanel extends StatelessWidget {
       case 'favorite':
         final pin = app.favoriteGridId != grid.id;
         await app.setFavoriteGrid(pin ? grid.id : null);
-        if (context.mounted) showToast(context, pin ? 'Pinned to home' : 'Removed from home', icon: Icons.star_rounded);
+        if (context.mounted) showToast(context, pin ? 'Fijada en el inicio' : 'Quitada del inicio', icon: Icons.star_rounded);
       case 'edit':
         await editGrid(context, grid);
       case 'copy':
-        await editGrid(context, GridPreset(id: '', name: '${grid.name} copy', layout: grid.layout, slots: grid.slots));
+        await editGrid(context, GridPreset(id: '', name: '${grid.name} (copia)', layout: grid.layout, slots: grid.slots));
       case 'delete':
         final ok = await confirmDialog(
           context,
-          title: 'Delete "${grid.name}"?',
-          message: 'The cameras are not affected; only this saved grid is removed.',
-          confirmLabel: 'Delete',
+          title: '¿Eliminar "${grid.name}"?',
+          message: 'Las cámaras no cambian; solo se borra esta grilla guardada.',
+          confirmLabel: 'Eliminar',
           danger: true,
         );
         if (ok) {
           await app.deleteGrid(grid.id);
-          if (context.mounted) showToast(context, 'Grid deleted');
+          if (context.mounted) showToast(context, 'Grilla eliminada');
         }
     }
   }
@@ -166,8 +166,8 @@ class MultiviewPanel extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              mainAxisSpacing: TopoSpace.cardGap,
-              crossAxisSpacing: TopoSpace.cardGap,
+              mainAxisSpacing: MatapoSpace.cardGap,
+              crossAxisSpacing: MatapoSpace.cardGap,
               childAspectRatio: 1.3,
             ),
             itemCount: grids.length + 1,
@@ -176,15 +176,15 @@ class MultiviewPanel extends StatelessWidget {
                 return TvCard(
                   onSelect: () async {
                     final saved = await editGrid(context, null);
-                    if (saved != null && context.mounted) showToast(context, '"${saved.name}" saved');
+                    if (saved != null && context.mounted) showToast(context, '"${saved.name}" guardada');
                   },
                   child: (focused) => const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_circle_rounded, size: 48, color: TopoColors.primaryAction),
-                      SizedBox(height: TopoSpace.md),
-                      Text('New grid', style: TopoText.label),
-                      Text('Pick a layout and cameras', style: TopoText.caption),
+                      Icon(Icons.add_circle_rounded, size: 48, color: MatapoColors.primaryAction),
+                      SizedBox(height: MatapoSpace.md),
+                      Text('Nueva grilla', style: MatapoText.label),
+                      Text('Elegí un diseño y las cámaras', style: MatapoText.caption),
                     ],
                   ),
                 );
@@ -192,11 +192,11 @@ class MultiviewPanel extends StatelessWidget {
               final grid = grids[i];
               final last = grid.id == app.activeGridId;
               return Semantics(
-                label: '${grid.name}, ${grid.cameraCount} cameras, ${grid.layout.label}${last ? ', last used' : ''}',
+                label: '${grid.name}, ${grid.cameraCount} cámaras, ${grid.layout.label}${last ? ', última usada' : ''}',
                 child: TvCard(
                   autofocus: i == 0,
                   selected: last,
-                  padding: const EdgeInsets.all(TopoSpace.md),
+                  padding: const EdgeInsets.all(MatapoSpace.md),
                   onSelect: () => openGrid(context, grid.id),
                   onLongSelect: () => _options(context, grid),
                   child: (focused) => Column(
@@ -205,26 +205,26 @@ class MultiviewPanel extends StatelessWidget {
                       Expanded(
                         child: LayoutDiagram(app: app, grid: grid),
                       ),
-                      const SizedBox(height: TopoSpace.sm),
+                      const SizedBox(height: MatapoSpace.sm),
                       Row(
                         children: [
                           Expanded(
-                            child: Text(grid.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TopoText.label),
+                            child: Text(grid.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: MatapoText.label),
                           ),
                           if (grid.id == app.favoriteGridId) ...[
-                            const Icon(Icons.star_rounded, size: 20, color: TopoColors.primaryAction, semanticLabel: 'Pinned to home'),
+                            const Icon(Icons.star_rounded, size: 20, color: MatapoColors.primaryAction, semanticLabel: 'Fijada en el inicio'),
                             const SizedBox(width: 4),
                           ],
                           if (last) ...[
-                            const Icon(Icons.check_circle_rounded, size: 18, color: TopoColors.primaryPressed),
+                            const Icon(Icons.check_circle_rounded, size: 18, color: MatapoColors.primaryPressed),
                             const SizedBox(width: 4),
-                            Text('Last used', style: TopoText.caption.copyWith(color: TopoColors.primaryPressed)),
+                            Text('Última usada', style: MatapoText.caption.copyWith(color: MatapoColors.primaryPressed)),
                           ],
                         ],
                       ),
                       Text(
-                        '${grid.cameraCount} cameras · ${grid.layout.label}${grid.isAuto ? ' · automatic' : ''}',
-                        style: TopoText.caption,
+                        '${grid.cameraCount} cámaras · ${grid.layout.label}${grid.isAuto ? ' · automática' : ''}',
+                        style: MatapoText.caption,
                       ),
                     ],
                   ),
@@ -233,11 +233,11 @@ class MultiviewPanel extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(height: TopoSpace.sm),
+        const SizedBox(height: MatapoSpace.sm),
         HintBar([
-          (const KeyCap('OK'), 'Watch grid'),
-          (const KeyCap('Hold OK'), 'Pin to home, edit or delete'),
-          (const KeyCap('CH ±'), 'Switch grid while watching'),
+          (const KeyCap('OK'), 'Ver grilla'),
+          (const KeyCap('Mantené OK'), 'Fijar, editar o eliminar'),
+          (const KeyCap('CH ±'), 'Cambiar de grilla mientras mirás'),
         ]),
       ],
     );
@@ -255,7 +255,7 @@ class GridSnapshotPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExcludeSemantics(
       child: Container(
-        decoration: BoxDecoration(color: TopoColors.media, borderRadius: BorderRadius.circular(TopoRadius.sm)),
+        decoration: BoxDecoration(color: MatapoColors.media, borderRadius: BorderRadius.circular(MatapoRadius.sm)),
         padding: const EdgeInsets.all(3),
         child: TileLayout(
           layout: grid.layout,
@@ -319,7 +319,7 @@ class LayoutDiagram extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExcludeSemantics(
       child: Container(
-        decoration: BoxDecoration(gradient: featuredGradient, borderRadius: BorderRadius.circular(TopoRadius.sm)),
+        decoration: BoxDecoration(gradient: featuredGradient, borderRadius: BorderRadius.circular(MatapoRadius.sm)),
         padding: const EdgeInsets.all(6),
         child: Center(
           child: AspectRatio(
@@ -333,15 +333,15 @@ class LayoutDiagram extends StatelessWidget {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
-                    color: camera != null ? TopoColors.primary : TopoColors.surface,
+                    color: camera != null ? MatapoColors.primary : MatapoColors.surface,
                     borderRadius: BorderRadius.circular(4),
-                    border: camera != null ? null : Border.all(color: TopoColors.outline),
+                    border: camera != null ? null : Border.all(color: MatapoColors.outline),
                   ),
                   child: Text(
                     camera?.name ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: TopoColors.onPrimary, fontSize: 10, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: MatapoColors.onPrimary, fontSize: 10, fontWeight: FontWeight.w600),
                   ),
                 );
               },
@@ -456,14 +456,14 @@ class _GridViewScreenState extends State<GridViewScreen> {
     if (grid.isAuto) {
       final copy = await confirmDialog(
         context,
-        title: 'All cameras is automatic',
-        message: 'Save a copy of this grid to choose the camera in each tile.',
-        confirmLabel: 'Save a copy',
+        title: 'Todas las cámaras es automática',
+        message: 'Guardá una copia de esta grilla para elegir la cámara de cada celda.',
+        confirmLabel: 'Guardar una copia',
       );
       if (!copy || !mounted) return;
       final saved = await editGrid(
         context,
-        GridPreset(id: '', name: 'My grid', layout: grid.layout, slots: grid.slots),
+        GridPreset(id: '', name: 'Mi grilla', layout: grid.layout, slots: grid.slots),
       );
       if (saved != null && mounted) _switchTo(saved.id);
       return;
@@ -531,7 +531,7 @@ class _GridViewScreenState extends State<GridViewScreen> {
         if (!didPop) _focusTiles();
       },
       child: Scaffold(
-        backgroundColor: TopoColors.media,
+        backgroundColor: MatapoColors.media,
         body: Focus(
           canRequestFocus: false,
           skipTraversal: true,
@@ -577,7 +577,7 @@ class _GridViewScreenState extends State<GridViewScreen> {
                 top: 0,
                 child: AnimatedOpacity(
                   opacity: showBar ? 1 : 0,
-                  duration: TopoMotion.navigation,
+                  duration: MatapoMotion.navigation,
                   child: Focus(
                     canRequestFocus: false,
                     skipTraversal: true,
@@ -586,21 +586,21 @@ class _GridViewScreenState extends State<GridViewScreen> {
                     child: FocusTraversalGroup(
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(48, 20, 48, 20),
-                        decoration: const BoxDecoration(color: TopoColors.media),
+                        decoration: const BoxDecoration(color: MatapoColors.media),
                         child: Row(
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(grid.name, style: TopoText.title.copyWith(color: TopoColors.onMedia)),
+                                Text(grid.name, style: MatapoText.title.copyWith(color: MatapoColors.onMedia)),
                                 Text(
-                                  '${grid.cameraCount} cameras · ${grid.layout.label} · CH ± to switch',
-                                  style: TopoText.caption.copyWith(color: const Color(0xFFC9D3DC)),
+                                  '${grid.cameraCount} cámaras · ${grid.layout.label} · CH ± para cambiar',
+                                  style: MatapoText.caption.copyWith(color: const Color(0xFFC9D3DC)),
                                 ),
                               ],
                             ),
-                            const SizedBox(width: TopoSpace.x2),
+                            const SizedBox(width: MatapoSpace.x2),
                             Expanded(
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
@@ -615,22 +615,22 @@ class _GridViewScreenState extends State<GridViewScreen> {
                                         focusNode: g.id == grid.id ? _barEntry : null,
                                         onSelect: () => _switchTo(g.id, keepBarFocus: true),
                                       ),
-                                      const SizedBox(width: TopoSpace.sm),
+                                      const SizedBox(width: MatapoSpace.sm),
                                     ],
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(width: TopoSpace.md),
+                            const SizedBox(width: MatapoSpace.md),
                             TvButton(
-                              label: grid.isAuto ? 'Save a copy' : 'Edit grid',
+                              label: grid.isAuto ? 'Guardar una copia' : 'Editar grilla',
                               icon: grid.isAuto ? Icons.copy_rounded : Icons.edit_rounded,
                               onMedia: true,
                               onPressed: () async {
                                 final saved = await editGrid(
                                   context,
                                   grid.isAuto
-                                      ? GridPreset(id: '', name: 'My grid', layout: grid.layout, slots: grid.slots)
+                                      ? GridPreset(id: '', name: 'Mi grilla', layout: grid.layout, slots: grid.slots)
                                       : grid,
                                 );
                                 if (saved != null && mounted) _switchTo(saved.id);
@@ -683,11 +683,11 @@ class _GridTileState extends State<_GridTile> {
   Widget build(BuildContext context) {
     final camera = widget.camera;
     final (status, icon, color) = camera == null
-        ? ('Empty', Icons.add_rounded, TopoColors.muted)
+        ? ('Vacía', Icons.add_rounded, MatapoColors.muted)
         : cameraStatus(camera, _live, previews: true);
     return Semantics(
       button: true,
-      label: camera == null ? 'Tile ${widget.number}, empty' : 'Tile ${widget.number}, ${camera.name}, $status',
+      label: camera == null ? 'Celda ${widget.number}, vacía' : 'Celda ${widget.number}, ${camera.name}, $status',
       child: TvFocusable(
         focusNode: widget.focusNode,
         ensureVisible: false,
@@ -702,11 +702,11 @@ class _GridTileState extends State<_GridTile> {
         onLongSelect: widget.onLongSelect,
         builder: (context, focused) => FocusRing(
           focused: focused,
-          radius: TopoRadius.md,
+          radius: MatapoRadius.md,
           onMedia: true,
           scale: false,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(TopoRadius.md),
+            borderRadius: BorderRadius.circular(MatapoRadius.md),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -717,8 +717,8 @@ class _GridTileState extends State<_GridTile> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.add_circle_outline_rounded, color: Color(0xFFC9D3DC), size: 36),
-                        SizedBox(height: TopoSpace.sm),
-                        Text('Empty tile · OK to add', style: TextStyle(color: Color(0xFFC9D3DC), fontSize: 16)),
+                        SizedBox(height: MatapoSpace.sm),
+                        Text('Celda vacía · OK para agregar', style: TextStyle(color: Color(0xFFC9D3DC), fontSize: 16)),
                       ],
                     ),
                   )
@@ -729,8 +729,8 @@ class _GridTileState extends State<_GridTile> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.visibility_off_rounded, color: Color(0xFFC9D3DC), size: 36),
-                        SizedBox(height: TopoSpace.sm),
-                        Text('Privacy mode on', style: TextStyle(color: Color(0xFFC9D3DC), fontSize: 16)),
+                        SizedBox(height: MatapoSpace.sm),
+                        Text('Modo privacidad activado', style: TextStyle(color: Color(0xFFC9D3DC), fontSize: 16)),
                       ],
                     ),
                   )
@@ -744,17 +744,17 @@ class _GridTileState extends State<_GridTile> {
                   ),
                 // Name label on an opaque media backing for legibility.
                 Positioned(
-                  left: TopoSpace.sm,
-                  bottom: TopoSpace.sm,
-                  right: TopoSpace.sm,
+                  left: MatapoSpace.sm,
+                  bottom: MatapoSpace.sm,
+                  right: MatapoSpace.sm,
                   child: Row(
                     children: [
                       Flexible(
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: TopoColors.media.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(TopoRadius.sm),
+                            color: MatapoColors.media.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(MatapoRadius.sm),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -762,32 +762,32 @@ class _GridTileState extends State<_GridTile> {
                               Text(
                                 '${widget.number}',
                                 style: const TextStyle(
-                                  color: TopoColors.onMedia,
+                                  color: MatapoColors.onMedia,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
                                 ),
                               ),
-                              const SizedBox(width: TopoSpace.sm),
+                              const SizedBox(width: MatapoSpace.sm),
                               Flexible(
                                 child: Text(
-                                  camera?.name ?? 'Empty',
+                                  camera?.name ?? 'Vacía',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: TopoColors.onMedia,
+                                    color: MatapoColors.onMedia,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
-                              if (camera != null && status == 'Live') ...[
-                                const SizedBox(width: TopoSpace.sm),
+                              if (camera != null && status == 'En vivo') ...[
+                                const SizedBox(width: MatapoSpace.sm),
                                 Icon(icon, size: 9, color: const Color(0xFF4CD99A)),
                                 const SizedBox(width: 4),
-                                const Text('Live', style: TextStyle(color: TopoColors.onMedia, fontSize: 13)),
+                                const Text('En vivo', style: TextStyle(color: MatapoColors.onMedia, fontSize: 13)),
                               ],
-                              if (color == TopoColors.error) ...[
-                                const SizedBox(width: TopoSpace.sm),
+                              if (color == MatapoColors.error) ...[
+                                const SizedBox(width: MatapoSpace.sm),
                                 Text(status, style: const TextStyle(color: Color(0xFFFFB4AB), fontSize: 13)),
                               ],
                             ],
@@ -839,14 +839,14 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
     final app = AppScope.read(context);
     final slots = _fit(_slots, _layout);
     if (slots.every((s) => s == null)) {
-      setState(() => _error = 'Add at least one camera to the grid.');
+      setState(() => _error = 'Agregá al menos una cámara a la grilla.');
       return;
     }
     setState(() {
       _saving = true;
       _error = null;
     });
-    final name = _name.trim().isEmpty ? 'Grid ${app.savedGrids.length + 1}' : _name.trim();
+    final name = _name.trim().isEmpty ? 'Grilla ${app.savedGrids.length + 1}' : _name.trim();
     final saved = await app.saveGrid(
       GridPreset(id: _isNew ? '' : widget.initial!.id, name: name, layout: _layout, slots: slots),
     );
@@ -869,73 +869,73 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(8),
                   children: [
-                    Text(_isNew ? 'New grid' : 'Edit grid', style: TopoText.headline),
-                    const Text('Choose a layout, then a camera for each tile.', style: TopoText.caption),
-                    const SizedBox(height: TopoSpace.xl),
+                    Text(_isNew ? 'Nueva grilla' : 'Editar grilla', style: MatapoText.headline),
+                    const Text('Elegí un diseño y después una cámara para cada celda.', style: MatapoText.caption),
+                    const SizedBox(height: MatapoSpace.xl),
                     TvTextField(
-                      label: 'Name',
-                      hint: 'e.g. Downstairs',
+                      label: 'Nombre',
+                      hint: 'por ejemplo, Planta baja',
                       icon: Icons.label_rounded,
                       value: _name,
                       autofocus: true,
                       onChanged: (v) => setState(() => _name = v),
                     ),
-                    const SizedBox(height: TopoSpace.xl),
+                    const SizedBox(height: MatapoSpace.xl),
                     Text(
-                      'Layout',
-                      style: TopoText.caption.copyWith(color: TopoColors.onSurface, fontWeight: FontWeight.w500),
+                      'Diseño',
+                      style: MatapoText.caption.copyWith(color: MatapoColors.onSurface, fontWeight: FontWeight.w500),
                     ),
-                    const SizedBox(height: TopoSpace.sm),
+                    const SizedBox(height: MatapoSpace.sm),
                     Wrap(
-                      spacing: TopoSpace.sm,
-                      runSpacing: TopoSpace.md,
+                      spacing: MatapoSpace.sm,
+                      runSpacing: MatapoSpace.md,
                       children: [
                         for (final l in GridLayout.values)
                           TvChip(label: l.label, selected: l == _layout, onSelect: () => setState(() => _layout = l)),
                       ],
                     ),
                     if (_error != null) ...[
-                      const SizedBox(height: TopoSpace.md),
+                      const SizedBox(height: MatapoSpace.md),
                       Row(
                         children: [
-                          const Icon(Icons.error_rounded, color: TopoColors.error),
-                          const SizedBox(width: TopoSpace.sm),
+                          const Icon(Icons.error_rounded, color: MatapoColors.error),
+                          const SizedBox(width: MatapoSpace.sm),
                           Expanded(
-                            child: Text(_error!, style: TopoText.body.copyWith(color: TopoColors.error)),
+                            child: Text(_error!, style: MatapoText.body.copyWith(color: MatapoColors.error)),
                           ),
                         ],
                       ),
                     ],
-                    const SizedBox(height: TopoSpace.x2),
+                    const SizedBox(height: MatapoSpace.x2),
                     TvButton(
-                      label: 'Save grid',
+                      label: 'Guardar grilla',
                       icon: Icons.check_rounded,
                       style: TvButtonStyle.primary,
                       busy: _saving,
                       expand: true,
                       onPressed: _save,
                     ),
-                    const SizedBox(height: TopoSpace.md),
+                    const SizedBox(height: MatapoSpace.md),
                     Wrap(
-                      spacing: TopoSpace.sm,
-                      runSpacing: TopoSpace.sm,
+                      spacing: MatapoSpace.sm,
+                      runSpacing: MatapoSpace.sm,
                       children: [
                         TvButton(
-                          label: 'Fill with all cameras',
+                          label: 'Completar con todas',
                           icon: Icons.auto_awesome_mosaic_rounded,
                           onPressed: _fillAll,
                         ),
                         if (!_isNew)
                           TvButton(
-                            label: 'Delete',
+                            label: 'Eliminar',
                             icon: Icons.delete_rounded,
                             style: TvButtonStyle.danger,
                             onPressed: () async {
                               final ok = await confirmDialog(
                                 context,
-                                title: 'Delete "${widget.initial!.name}"?',
-                                message: 'Only this saved grid is removed.',
-                                confirmLabel: 'Delete',
+                                title: '¿Eliminar "${widget.initial!.name}"?',
+                                message: 'Solo se borra esta grilla guardada.',
+                                confirmLabel: 'Eliminar',
                                 danger: true,
                               );
                               if (ok && context.mounted) {
@@ -945,7 +945,7 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
                             },
                           ),
                         TvButton(
-                          label: 'Cancel',
+                          label: 'Cancelar',
                           style: TvButtonStyle.text,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -955,15 +955,15 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: TopoSpace.x3),
+            const SizedBox(width: MatapoSpace.x3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  const Text('Tiles', style: TopoText.title),
-                  const Text('OK on a tile to choose its camera.', style: TopoText.caption),
-                  const SizedBox(height: TopoSpace.lg),
+                  const Text('Celdas', style: MatapoText.title),
+                  const Text('OK en una celda para elegir su cámara.', style: MatapoText.caption),
+                  const SizedBox(height: MatapoSpace.lg),
                   Expanded(
                     child: Align(
                       alignment: Alignment.topCenter,
@@ -976,7 +976,7 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
                             builder: (i) {
                               final camera = app.cameraById(slots[i]);
                               return TvCard(
-                                padding: const EdgeInsets.all(TopoSpace.sm),
+                                padding: const EdgeInsets.all(MatapoSpace.sm),
                                 onSelect: () async {
                                   final picked = await pickCamera(context, slot: i, current: slots[i]);
                                   if (picked == null) return;
@@ -987,18 +987,18 @@ class _GridEditorScreenState extends State<GridEditorScreen> {
                                   children: [
                                     Icon(
                                       camera == null ? Icons.add_circle_outline_rounded : Icons.videocam_rounded,
-                                      color: TopoColors.primaryAction,
+                                      color: MatapoColors.primaryAction,
                                       size: _layout.slots > 6 ? 22 : 30,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      camera?.name ?? 'Tile ${i + 1}',
+                                      camera?.name ?? 'Celda ${i + 1}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TopoText.label.copyWith(fontSize: _layout.slots > 6 ? 15 : 18),
+                                      style: MatapoText.label.copyWith(fontSize: _layout.slots > 6 ? 15 : 18),
                                     ),
                                     if (camera == null && _layout.slots <= 6)
-                                      const Text('Add camera', style: TopoText.caption),
+                                      const Text('Agregar cámara', style: MatapoText.caption),
                                   ],
                                 ),
                               );

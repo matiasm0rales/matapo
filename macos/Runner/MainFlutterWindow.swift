@@ -6,24 +6,23 @@ class MainFlutterWindow: NSWindow {
     let flutterViewController = FlutterViewController()
     self.contentViewController = flutterViewController
 
-    // The UI is laid out for a 1080p TV (960 × 540 logical): start at 720p
-    // and never go smaller than that layout.
-    self.title = "Topo TV"
-    self.contentMinSize = NSSize(width: 960, height: 540)
+    self.title = "Matapo"
+    self.contentMinSize = NSSize(width: 820, height: 520)
     self.setContentSize(NSSize(width: 1280, height: 720))
     self.center()
     self.collectionBehavior.insert(.fullScreenPrimary)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     registerPlayerChannel(flutterViewController.engine.binaryMessenger)
+    registerWindowChannel(flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }
 
-  /// Same "topo/player" channel as MainActivity.kt on Android, so
+  /// Same "matapo/player" channel as MainActivity.kt on Android, so
   /// Snapshots (lib/player/stream_queue.dart) works unchanged.
   private func registerPlayerChannel(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(name: "topo/player", binaryMessenger: messenger)
+    let channel = FlutterMethodChannel(name: "matapo/player", binaryMessenger: messenger)
     channel.setMethodCallHandler { call, result in
       switch call.method {
       // Where the player saves last-frame snapshots (app cache).
@@ -32,6 +31,22 @@ class MainFlutterWindow: NSWindow {
         let dir = caches.appendingPathComponent("snapshots", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         result(dir.path)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  /// Full screen for the live view's button and the F shortcut.
+  private func registerWindowChannel(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "matapo/window", binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      switch call.method {
+      case "toggleFullScreen":
+        self?.toggleFullScreen(nil)
+        result(nil)
+      case "isFullScreen":
+        result(self?.styleMask.contains(.fullScreen) ?? false)
       default:
         result(FlutterMethodNotImplemented)
       }

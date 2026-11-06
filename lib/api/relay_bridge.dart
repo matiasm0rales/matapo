@@ -58,7 +58,7 @@ class RelayBridge {
     final quality = request.uri.queryParameters['q'] == StreamQuality.low.name ? StreamQuality.low : StreamQuality.hd;
     final video = StreamIterator(client.openVideoStream(baseUrl, device, quality: quality));
     try {
-      if (!await video.moveNext()) throw TapoException('Camera sent no video');
+      if (!await video.moveNext()) throw TapoException('La cámara no envió video');
     } catch (e) {
       lastErrors[deviceId] = e.toString();
       await video.cancel();

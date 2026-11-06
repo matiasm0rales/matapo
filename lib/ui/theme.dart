@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Design tokens from DESIGN.md ("Tapo Inspired — TV and Mobile"), TV
 /// profile. Sizes are logical units on the 960 × 540 TV canvas.
-class TopoColors {
+class MatapoColors {
   static const primary = Color(0xFF0288E3); // decorative accents only
   static const primaryAction = Color(0xFF0067AD); // filled actions, blue text
   static const primaryPressed = Color(0xFF005A99); // pressed + focus outline
@@ -23,16 +23,16 @@ class TopoColors {
   static const onMedia = Color(0xFFFFFFFF);
 }
 
-class TopoText {
-  static const display = TextStyle(fontSize: 36, fontWeight: FontWeight.w700, height: 1.2, color: TopoColors.onSurface);
-  static const headline = TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25, color: TopoColors.onSurface);
-  static const title = TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.3, color: TopoColors.onSurface);
-  static const body = TextStyle(fontSize: 18, fontWeight: FontWeight.w400, height: 1.5, color: TopoColors.onSurface);
-  static const label = TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.3, color: TopoColors.onSurface);
-  static const caption = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.4, color: TopoColors.muted);
+class MatapoText {
+  static const display = TextStyle(fontSize: 36, fontWeight: FontWeight.w700, height: 1.2, color: MatapoColors.onSurface);
+  static const headline = TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25, color: MatapoColors.onSurface);
+  static const title = TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.3, color: MatapoColors.onSurface);
+  static const body = TextStyle(fontSize: 18, fontWeight: FontWeight.w400, height: 1.5, color: MatapoColors.onSurface);
+  static const label = TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.3, color: MatapoColors.onSurface);
+  static const caption = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.4, color: MatapoColors.muted);
 }
 
-class TopoRadius {
+class MatapoRadius {
   static const sm = 8.0;
   static const md = 12.0;
   static const lg = 16.0;
@@ -40,7 +40,7 @@ class TopoRadius {
   static const full = 999.0;
 }
 
-class TopoSpace {
+class MatapoSpace {
   static const xs = 4.0;
   static const sm = 8.0;
   static const md = 12.0;
@@ -56,7 +56,7 @@ class TopoSpace {
   static const focusWidth = 3.0;
 }
 
-class TopoMotion {
+class MatapoMotion {
   static const press = Duration(milliseconds: 120);
   static const focus = Duration(milliseconds: 160);
   static const navigation = Duration(milliseconds: 220);
@@ -73,41 +73,41 @@ const featuredGradient = LinearGradient(
   stops: [0.1, 1],
   colors: [Color(0xFFFAFDF8), Color(0xFFE6F7FF)],
 );
-const featuredShadow = [BoxShadow(color: TopoColors.outline, offset: Offset(3, 3))];
+const featuredShadow = [BoxShadow(color: MatapoColors.outline, offset: Offset(3, 3))];
 
 /// Overscan-safe padding for TV screens.
 const tvSafePadding = EdgeInsets.symmetric(horizontal: 48, vertical: 27);
 
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(
-    seedColor: TopoColors.primary,
+    seedColor: MatapoColors.primary,
     brightness: Brightness.light,
-    primary: TopoColors.primaryAction,
-    onPrimary: TopoColors.onPrimary,
-    surface: TopoColors.surface,
-    onSurface: TopoColors.onSurface,
-    error: TopoColors.error,
+    primary: MatapoColors.primaryAction,
+    onPrimary: MatapoColors.onPrimary,
+    surface: MatapoColors.surface,
+    onSurface: MatapoColors.onSurface,
+    error: MatapoColors.error,
   );
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: TopoColors.neutral,
+    scaffoldBackgroundColor: MatapoColors.neutral,
     // Aktiv Grotesk is not bundled; fall back to the Android system sans.
     fontFamily: 'Roboto',
     textTheme: const TextTheme(
-      displaySmall: TopoText.display,
-      headlineSmall: TopoText.headline,
-      titleLarge: TopoText.title,
-      bodyLarge: TopoText.body,
-      bodyMedium: TopoText.caption,
-      labelLarge: TopoText.label,
+      displaySmall: MatapoText.display,
+      headlineSmall: MatapoText.headline,
+      titleLarge: MatapoText.title,
+      bodyLarge: MatapoText.body,
+      bodyMedium: MatapoText.caption,
+      labelLarge: MatapoText.label,
     ),
     // Focus is shown by our own outline, never by splash or hover effects.
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     focusColor: Colors.transparent,
     hoverColor: Colors.transparent,
-    dialogTheme: const DialogThemeData(backgroundColor: TopoColors.surface),
-    textSelectionTheme: const TextSelectionThemeData(cursorColor: TopoColors.primaryAction),
+    dialogTheme: const DialogThemeData(backgroundColor: MatapoColors.surface),
+    textSelectionTheme: const TextSelectionThemeData(cursorColor: MatapoColors.primaryAction),
   );
 }

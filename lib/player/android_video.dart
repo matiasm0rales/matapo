@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 /// Routes native player events (see LivePlayer.kt) to their view.
 class _PlayerEvents {
   _PlayerEvents._() {
-    const MethodChannel('topo/player').setMethodCallHandler((call) async {
+    const MethodChannel('matapo/player').setMethodCallHandler((call) async {
       if (call.method != 'event') return;
       final args = Map<String, dynamic>.from(call.arguments as Map);
       _listeners[(args['id'] as num).toInt()]?.call(args);
@@ -23,7 +23,7 @@ class AndroidVideo extends StatelessWidget {
   final String? snapshotPath;
   final void Function(Map<String, dynamic>) onEvent;
 
-  static const _viewType = 'topo/live-video';
+  static const _viewType = 'matapo/live-video';
 
   @override
   Widget build(BuildContext context) {

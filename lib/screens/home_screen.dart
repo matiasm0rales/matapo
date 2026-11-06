@@ -52,7 +52,7 @@ Future<void> openLive(BuildContext context, int index) async {
   final previous = guideSection.value;
   await Navigator.of(context).push(
     PageRouteBuilder<void>(
-      transitionDuration: TopoMotion.navigation,
+      transitionDuration: MatapoMotion.navigation,
       pageBuilder: (_, _, _) => LiveScreen(initialIndex: index),
       transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
     ),
@@ -115,42 +115,42 @@ class _HomeScreenState extends State<HomeScreen> {
             FocusTraversalGroup(
               child: Row(
                 children: [
-                  Image.asset('assets/topo.png', width: 40, height: 40, semanticLabel: 'Tapo'),
-                  const SizedBox(width: TopoSpace.sm),
-                  const Text('Tapo', style: TopoText.title),
-                  const SizedBox(width: TopoSpace.x2),
+                  Image.asset('assets/matapo.png', width: 40, height: 40, semanticLabel: 'Matapo'),
+                  const SizedBox(width: MatapoSpace.sm),
+                  const Text('Matapo', style: MatapoText.title),
+                  const SizedBox(width: MatapoSpace.x2),
                   for (final (tab, label, icon) in const [
-                    (HomeTab.cameras, 'Cameras', Icons.videocam_rounded),
-                    (HomeTab.multiview, 'Multi-view', Icons.grid_view_rounded),
-                    (HomeTab.settings, 'Settings', Icons.settings_rounded),
+                    (HomeTab.cameras, 'Cámaras', Icons.videocam_rounded),
+                    (HomeTab.multiview, 'Grillas', Icons.grid_view_rounded),
+                    (HomeTab.settings, 'Ajustes', Icons.settings_rounded),
                   ]) ...[
                     _NavItem(label: label, icon: icon, selected: _tab == tab, onSelect: () => _select(tab)),
-                    const SizedBox(width: TopoSpace.sm),
+                    const SizedBox(width: MatapoSpace.sm),
                   ],
                   const Spacer(),
                   if (_tab == HomeTab.cameras) ...[
                     TvButton(
                       label: '',
-                      semanticLabel: 'Refresh cameras',
+                      semanticLabel: 'Actualizar cámaras',
                       icon: Icons.refresh_rounded,
                       busy: app.loadingCameras,
                       onPressed: app.refreshCameras,
                     ),
-                    const SizedBox(width: TopoSpace.sm),
+                    const SizedBox(width: MatapoSpace.sm),
                   ],
                   TvButton(
-                    label: 'Guide',
+                    label: 'Guía',
                     icon: Icons.help_outline_rounded,
                     onPressed: () => showRemoteGuide(context, section: guideSection.value),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: TopoSpace.lg),
+            const SizedBox(height: MatapoSpace.lg),
             Expanded(
               child: FocusTraversalGroup(
                 child: AnimatedSwitcher(
-                  duration: TopoMotion.navigation,
+                  duration: MatapoMotion.navigation,
                   child: switch (_tab) {
                     HomeTab.cameras => CamerasPanel(key: const ValueKey('cameras'), active: active),
                     HomeTab.multiview => const MultiviewPanel(key: ValueKey('multiview')),
@@ -184,24 +184,24 @@ class _NavItem extends StatelessWidget {
       child: TvFocusable(
         onSelect: onSelect,
         builder: (context, focused) {
-          final fg = selected ? TopoColors.primaryPressed : TopoColors.muted;
+          final fg = selected ? MatapoColors.primaryPressed : MatapoColors.muted;
           return FocusRing(
             focused: focused,
-            radius: TopoRadius.full,
+            radius: MatapoRadius.full,
             child: AnimatedContainer(
-              duration: TopoMotion.focus,
+              duration: MatapoMotion.focus,
               height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: TopoSpace.xl),
+              padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.xl),
               decoration: BoxDecoration(
-                color: selected ? TopoColors.surfaceSelected : TopoColors.surface,
-                borderRadius: BorderRadius.circular(TopoRadius.full),
+                color: selected ? MatapoColors.surfaceSelected : MatapoColors.surface,
+                borderRadius: BorderRadius.circular(MatapoRadius.full),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(icon, size: 22, color: fg),
-                  const SizedBox(width: TopoSpace.sm),
-                  Text(label, style: TopoText.label.copyWith(color: fg)),
+                  const SizedBox(width: MatapoSpace.sm),
+                  Text(label, style: MatapoText.label.copyWith(color: fg)),
                 ],
               ),
             ),
@@ -234,25 +234,25 @@ class _CamerasPanelState extends State<CamerasPanel> {
         message: camera.model,
         children: [
           TvTile(
-            title: 'Watch live',
+            title: 'Ver en vivo',
             icon: Icons.play_arrow_rounded,
             autofocus: true,
             onSelect: () => Navigator.pop(context, 'live'),
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           TvTile(
-            title: privacy == true ? 'Turn privacy mode off' : 'Turn privacy mode on',
+            title: privacy == true ? 'Desactivar modo privacidad' : 'Activar modo privacidad',
             subtitle: privacy == null
-                ? 'Checking the camera…'
+                ? 'Consultando la cámara…'
                 : privacy
-                    ? 'Video starts again'
-                    : 'The lens is covered and video stops',
+                    ? 'El video vuelve a funcionar'
+                    : 'Se tapa el lente y se corta el video',
             icon: privacy == true ? Icons.visibility_rounded : Icons.visibility_off_rounded,
             onSelect: privacy == null ? null : () => Navigator.pop(context, 'privacy'),
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
           TvTile(
-            title: 'Reconnect preview',
+            title: 'Reconectar la vista previa',
             icon: Icons.refresh_rounded,
             onSelect: () => Navigator.pop(context, 'reconnect'),
           ),
@@ -268,10 +268,10 @@ class _CamerasPanelState extends State<CamerasPanel> {
         await app.refreshCameraState(camera, force: true);
       case 'privacy':
         final enable = !(privacy ?? false);
-        showToast(context, enable ? 'Turning privacy mode on…' : 'Turning privacy mode off…', icon: Icons.hourglass_top_rounded);
+        showToast(context, enable ? 'Activando el modo privacidad…' : 'Desactivando el modo privacidad…', icon: Icons.hourglass_top_rounded);
         try {
           await app.setPrivacy(camera, enable);
-          if (mounted) showToast(context, enable ? 'Privacy mode is on' : 'Privacy mode is off');
+          if (mounted) showToast(context, enable ? 'Modo privacidad activado' : 'Modo privacidad desactivado');
         } catch (e) {
           if (mounted) showToast(context, e.toString(), error: true);
         }
@@ -307,7 +307,7 @@ class _CamerasPanelState extends State<CamerasPanel> {
               slivers: [
                 SliverPadding(
                   // Room for the focus outline and scale; never clip focus.
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, TopoSpace.x2),
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, MatapoSpace.x2),
                   sliver: SliverToBoxAdapter(child: FavoriteGridCard(app: app, autofocus: true)),
                 ),
                 SliverPadding(
@@ -315,8 +315,8 @@ class _CamerasPanelState extends State<CamerasPanel> {
                   sliver: SliverGrid.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
-                      mainAxisSpacing: TopoSpace.cardGap,
-                      crossAxisSpacing: TopoSpace.cardGap,
+                      mainAxisSpacing: MatapoSpace.cardGap,
+                      crossAxisSpacing: MatapoSpace.cardGap,
                       childAspectRatio: 1.25,
                     ),
                     itemCount: cameras.length,
@@ -338,12 +338,12 @@ class _CamerasPanelState extends State<CamerasPanel> {
               ],
             ),
           ),
-          const SizedBox(height: TopoSpace.sm),
+          const SizedBox(height: MatapoSpace.sm),
           HintBar([
-            (const KeyCap('OK'), 'Watch live'),
-            (const KeyCap('Hold OK'), 'Quick actions'),
-            (const KeyCap('1–9'), 'Jump to camera'),
-            (const KeyCap('', icon: Icons.menu_rounded), 'Remote guide'),
+            (const KeyCap('OK'), 'Ver en vivo'),
+            (const KeyCap('Mantené OK'), 'Acciones rápidas'),
+            (const KeyCap('1–9'), 'Ir a una cámara'),
+            (const KeyCap('', icon: Icons.menu_rounded), 'Guía del control'),
           ]),
         ],
       ),
@@ -366,19 +366,19 @@ class _Empty extends StatelessWidget {
             width: 96,
             height: 96,
             decoration: const BoxDecoration(gradient: featuredGradient, shape: BoxShape.circle, boxShadow: featuredShadow),
-            child: Icon(error != null ? Icons.cloud_off_rounded : Icons.videocam_off_rounded, size: 44, color: TopoColors.primary),
+            child: Icon(error != null ? Icons.cloud_off_rounded : Icons.videocam_off_rounded, size: 44, color: MatapoColors.primary),
           ),
-          const SizedBox(height: TopoSpace.xl),
-          Text(error != null ? 'Could not load your cameras' : 'No cameras on this account', style: TopoText.headline),
-          const SizedBox(height: TopoSpace.sm),
+          const SizedBox(height: MatapoSpace.xl),
+          Text(error != null ? 'No se pudieron cargar tus cámaras' : 'No hay cámaras en esta cuenta', style: MatapoText.headline),
+          const SizedBox(height: MatapoSpace.sm),
           Text(
-            error ?? 'Add cameras with the Tapo app on your phone, then refresh.',
+            error ?? 'Agregá cámaras con la app de Tapo en tu teléfono y después actualizá.',
             textAlign: TextAlign.center,
-            style: TopoText.body.copyWith(color: error != null ? TopoColors.error : TopoColors.muted),
+            style: MatapoText.body.copyWith(color: error != null ? MatapoColors.error : MatapoColors.muted),
           ),
-          const SizedBox(height: TopoSpace.x2),
+          const SizedBox(height: MatapoSpace.x2),
           TvButton(
-            label: error != null ? 'Try again' : 'Refresh',
+            label: error != null ? 'Reintentar' : 'Actualizar',
             icon: Icons.refresh_rounded,
             style: TvButtonStyle.primary,
             autofocus: true,
@@ -393,16 +393,16 @@ class _Empty extends StatelessWidget {
 
 /// Camera status as text plus icon (never color alone).
 (String, IconData, Color) cameraStatus(Camera camera, LiveState? live, {required bool previews}) {
-  if (camera.privacy == true) return ('Privacy on', Icons.visibility_off_rounded, TopoColors.muted);
+  if (camera.privacy == true) return ('Privacidad activada', Icons.visibility_off_rounded, MatapoColors.muted);
   if (!previews) {
     final taken = snapshotTime(camera.deviceId);
-    return (taken == null ? 'Ready' : 'Last seen $taken', Icons.photo_camera_rounded, TopoColors.muted);
+    return (taken == null ? 'Lista' : 'Última imagen $taken', Icons.photo_camera_rounded, MatapoColors.muted);
   }
   return switch (live) {
-    LiveState.playing => ('Live', Icons.circle, TopoColors.success),
-    LiveState.failed => ('Not responding', Icons.error_outline_rounded, TopoColors.error),
-    LiveState.retrying => ('Reconnecting', Icons.sync_rounded, TopoColors.muted),
-    _ => ('Connecting', Icons.sync_rounded, TopoColors.muted),
+    LiveState.playing => ('En vivo', Icons.circle, MatapoColors.success),
+    LiveState.failed => ('No responde', Icons.error_outline_rounded, MatapoColors.error),
+    LiveState.retrying => ('Reconectando', Icons.sync_rounded, MatapoColors.muted),
+    _ => ('Conectando', Icons.sync_rounded, MatapoColors.muted),
   };
 }
 
@@ -451,18 +451,18 @@ class _CameraCardState extends State<_CameraCard> {
           }
         },
         onLongSelect: widget.onLongSelect,
-        padding: const EdgeInsets.all(TopoSpace.md),
+        padding: const EdgeInsets.all(MatapoSpace.md),
         child: (focused) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(TopoRadius.sm),
+                borderRadius: BorderRadius.circular(MatapoRadius.sm),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     if (privacy)
-                      const _Placeholder(icon: Icons.visibility_off_rounded, text: 'Privacy mode on')
+                      const _Placeholder(icon: Icons.visibility_off_rounded, text: 'Modo privacidad activado')
                     else if (widget.showVideo)
                       LiveVideo(
                         key: widget.videoKey,
@@ -474,19 +474,19 @@ class _CameraCardState extends State<_CameraCard> {
                     else
                       SnapshotView(
                         deviceId: camera.deviceId,
-                        fallback: const _Placeholder(icon: Icons.videocam_rounded, text: 'Press OK to watch'),
+                        fallback: const _Placeholder(icon: Icons.videocam_rounded, text: 'Presioná OK para ver'),
                       ),
                     Positioned(
-                      left: TopoSpace.sm,
-                      top: TopoSpace.sm,
+                      left: MatapoSpace.sm,
+                      top: MatapoSpace.sm,
                       child: Container(
                         width: 28,
                         height: 28,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(color: TopoColors.surface, borderRadius: BorderRadius.circular(TopoRadius.sm)),
+                        decoration: BoxDecoration(color: MatapoColors.surface, borderRadius: BorderRadius.circular(MatapoRadius.sm)),
                         child: Text(
                           '${widget.number}',
-                          style: const TextStyle(color: TopoColors.primaryPressed, fontWeight: FontWeight.w700, fontSize: 15),
+                          style: const TextStyle(color: MatapoColors.primaryPressed, fontWeight: FontWeight.w700, fontSize: 15),
                         ),
                       ),
                     ),
@@ -494,19 +494,19 @@ class _CameraCardState extends State<_CameraCard> {
                 ),
               ),
             ),
-            const SizedBox(height: TopoSpace.sm),
-            Text(camera.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TopoText.label),
+            const SizedBox(height: MatapoSpace.sm),
+            Text(camera.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: MatapoText.label),
             Row(
               children: [
-                Icon(statusIcon, size: status == 'Live' ? 10 : 16, color: statusColor),
+                Icon(statusIcon, size: status == 'En vivo' ? 10 : 16, color: statusColor),
                 const SizedBox(width: 6),
-                Text(status, style: TopoText.caption.copyWith(color: statusColor == TopoColors.muted ? TopoColors.muted : statusColor)),
+                Text(status, style: MatapoText.caption.copyWith(color: statusColor == MatapoColors.muted ? MatapoColors.muted : statusColor)),
                 Expanded(
                   child: Text(
-                    [' · ${camera.model}', if (camera.ptz == true) 'Pan & tilt'].join(' · '),
+                    [' · ${camera.model}', if (camera.ptz == true) 'Movimiento'].join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TopoText.caption,
+                    style: MatapoText.caption,
                   ),
                 ),
               ],
@@ -529,9 +529,9 @@ class _Placeholder extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: TopoColors.primary, size: 32),
-            const SizedBox(height: TopoSpace.sm),
-            Text(text, style: TopoText.caption),
+            Icon(icon, color: MatapoColors.primary, size: 32),
+            const SizedBox(height: MatapoSpace.sm),
+            Text(text, style: MatapoText.caption),
           ],
         ),
       );
@@ -545,23 +545,23 @@ Future<void> chooseFavoriteGrid(BuildContext context) async {
   final picked = await showTvDialog<String>(
     context,
     (context) => TvDialog(
-      title: 'Favourite grid',
-      message: 'Pinned at the top of the home page for one-press access.',
+      title: 'Grilla favorita',
+      message: 'Fijada arriba en el inicio para abrirla con un botón.',
       children: [
         for (final grid in app.grids) ...[
           TvTile(
             title: grid.name,
-            subtitle: '${grid.cameraCount} cameras · ${grid.layout.label}',
+            subtitle: '${grid.cameraCount} cámaras · ${grid.layout.label}',
             icon: Icons.grid_view_rounded,
             selected: grid.id == current,
             autofocus: grid.id == current || (current == null && grid.isAuto),
             onSelect: () => Navigator.pop(context, grid.id),
           ),
-          const SizedBox(height: TopoSpace.md),
+          const SizedBox(height: MatapoSpace.md),
         ],
         if (current != null)
           TvTile(
-            title: 'Remove from home',
+            title: 'Quitar del inicio',
             icon: Icons.star_outline_rounded,
             danger: true,
             onSelect: () => Navigator.pop(context, ''),
@@ -572,7 +572,7 @@ Future<void> chooseFavoriteGrid(BuildContext context) async {
   if (picked == null) return;
   await app.setFavoriteGrid(picked.isEmpty ? null : picked);
   if (context.mounted) {
-    showToast(context, picked.isEmpty ? 'Removed from home' : 'Pinned to home', icon: Icons.star_rounded);
+    showToast(context, picked.isEmpty ? 'Quitada del inicio' : 'Fijada en el inicio', icon: Icons.star_rounded);
   }
 }
 
@@ -589,25 +589,25 @@ class FavoriteGridCard extends StatelessWidget {
     if (grid == null) {
       return Semantics(
         button: true,
-        label: 'Add a favourite grid',
+        label: 'Agregá una grilla favorita',
         child: TvCard(
           autofocus: autofocus,
           onSelect: () => chooseFavoriteGrid(context),
-          padding: const EdgeInsets.symmetric(horizontal: TopoSpace.xl, vertical: TopoSpace.lg),
+          padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.xl, vertical: MatapoSpace.lg),
           child: (focused) => const Row(
             children: [
-              Icon(Icons.star_outline_rounded, color: TopoColors.primaryAction, size: 32),
-              SizedBox(width: TopoSpace.lg),
+              Icon(Icons.star_outline_rounded, color: MatapoColors.primaryAction, size: 32),
+              SizedBox(width: MatapoSpace.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Add a favourite grid', style: TopoText.label),
-                    Text('Pin a multi-view grid here to open it with one press.', style: TopoText.caption),
+                    Text('Agregá una grilla favorita', style: MatapoText.label),
+                    Text('Fijá una grilla acá para abrirla con un botón.', style: MatapoText.caption),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: TopoColors.muted),
+              Icon(Icons.chevron_right_rounded, color: MatapoColors.muted),
             ],
           ),
         ),
@@ -615,10 +615,10 @@ class FavoriteGridCard extends StatelessWidget {
     }
     return Semantics(
       button: true,
-      label: 'Favourite grid ${grid.name}, ${grid.cameraCount} cameras. Press OK to watch.',
+      label: 'Grilla favorita ${grid.name}, ${grid.cameraCount} cámaras. Presioná OK para ver.',
       child: TvCard(
         autofocus: autofocus,
-        padding: const EdgeInsets.all(TopoSpace.md),
+        padding: const EdgeInsets.all(MatapoSpace.md),
         onSelect: () => openGrid(context, grid.id),
         onLongSelect: () => chooseFavoriteGrid(context),
         child: (focused) => Row(
@@ -627,7 +627,7 @@ class FavoriteGridCard extends StatelessWidget {
               width: 300,
               child: AspectRatio(aspectRatio: 16 / 9, child: GridSnapshotPreview(app: app, grid: grid)),
             ),
-            const SizedBox(width: TopoSpace.x2),
+            const SizedBox(width: MatapoSpace.x2),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,18 +635,18 @@ class FavoriteGridCard extends StatelessWidget {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.star_rounded, color: TopoColors.primaryAction, size: 20),
+                      Icon(Icons.star_rounded, color: MatapoColors.primaryAction, size: 20),
                       SizedBox(width: 6),
-                      Text('Favourite grid', style: TextStyle(color: TopoColors.primaryPressed, fontSize: 16, fontWeight: FontWeight.w500)),
+                      Text('Grilla favorita', style: TextStyle(color: MatapoColors.primaryPressed, fontSize: 16, fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  const SizedBox(height: TopoSpace.xs),
-                  Text(grid.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TopoText.headline),
-                  Text('${grid.cameraCount} cameras · ${grid.layout.label}', style: TopoText.caption),
-                  const SizedBox(height: TopoSpace.md),
+                  const SizedBox(height: MatapoSpace.xs),
+                  Text(grid.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: MatapoText.headline),
+                  Text('${grid.cameraCount} cámaras · ${grid.layout.label}', style: MatapoText.caption),
+                  const SizedBox(height: MatapoSpace.md),
                   HintBar([
-                    (const KeyCap('OK'), 'Watch grid'),
-                    (const KeyCap('Hold OK'), 'Change'),
+                    (const KeyCap('OK'), 'Ver grilla'),
+                    (const KeyCap('Mantené OK'), 'Cambiar'),
                   ]),
                 ],
               ),

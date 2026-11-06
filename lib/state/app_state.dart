@@ -18,7 +18,7 @@ class Camera {
   final Map<String, dynamic> raw;
 
   String get deviceId => '${raw['deviceId'] ?? ''}';
-  String get name => '${raw['alias'] ?? raw['deviceName'] ?? 'Camera'}'.trim();
+  String get name => '${raw['alias'] ?? raw['deviceName'] ?? 'Cámara'}'.trim();
   String get model => '${raw['deviceModel'] ?? ''}';
   String get firmware => '${raw['fwVer'] ?? ''}'.split(' ').first;
 
@@ -49,8 +49,8 @@ class PendingMfa {
 }
 
 class AppState extends ChangeNotifier {
-  /// UI test mode (`--dart-define=TOPO_DEMO=true`): fake cameras, no cloud.
-  static const demo = bool.fromEnvironment('TOPO_DEMO');
+  /// UI test mode (`--dart-define=MATAPO_DEMO=true`): fake cameras, no cloud.
+  static const demo = bool.fromEnvironment('MATAPO_DEMO');
 
   static const _kSession = 'session';
   static const _kTerminal = 'terminal_uuid';
@@ -111,11 +111,11 @@ class AppState extends ChangeNotifier {
     if (demo) {
       cameras = [
         for (final (name, model, ptz, privacy) in const [
-          ('Living room', 'C200', true, false),
-          ('Front door', 'C320WS', false, false),
-          ('Garden', 'C500', true, false),
-          ('Baby room', 'C210', true, true),
-          ('Garage', 'C110', false, false),
+          ('Living', 'C200', true, false),
+          ('Puerta', 'C320WS', false, false),
+          ('Jardín', 'C500', true, false),
+          ('Cuarto del bebé', 'C210', true, true),
+          ('Garaje', 'C110', false, false),
         ])
           Camera({'deviceId': 'demo-$name', 'alias': name, 'deviceModel': model, '_ptz': ptz, '_privacy': privacy}),
       ];
@@ -176,9 +176,9 @@ class AppState extends ChangeNotifier {
   }
 
   /// Demo mode only: an MPEG-TS URL used instead of the cloud relay, e.g.
-  /// `--dart-define=TOPO_DEMO_STREAM=http://127.0.0.1:8099/live.ts` with
+  /// `--dart-define=MATAPO_DEMO_STREAM=http://127.0.0.1:8099/live.ts` with
   /// `adb reverse tcp:8099 tcp:8099`.
-  static const _demoStream = String.fromEnvironment('TOPO_DEMO_STREAM');
+  static const _demoStream = String.fromEnvironment('MATAPO_DEMO_STREAM');
 
   String streamUrl(Camera camera, {StreamQuality quality = StreamQuality.hd}) =>
       demo && _demoStream.isNotEmpty ? '$_demoStream?cam=${Uri.encodeComponent(camera.deviceId)}' : relay.urlFor(camera.deviceId, quality: quality);
@@ -189,7 +189,7 @@ class AppState extends ChangeNotifier {
   Future<bool> login(String username, String password) async {
     username = username.trim();
     if (username.isEmpty || password.isEmpty) {
-      throw TapoException('Enter your Tapo email and password');
+      throw TapoException('Ingresá tu correo y tu contraseña de Tapo');
     }
     final client = _newClient();
     final result = await client.login(username, password);
@@ -217,7 +217,7 @@ class AppState extends ChangeNotifier {
   Future<void> requestMfa(int type) async {
     final pending = pendingMfa;
     final client = _client;
-    if (pending == null || client == null) throw TapoException('Sign in again');
+    if (pending == null || client == null) throw TapoException('Volvé a iniciar sesión');
     await client.requestMfa(pending.baseUrl, pending.username, pending.password, type);
     pending.requestedType = type;
     notifyListeners();
@@ -226,11 +226,11 @@ class AppState extends ChangeNotifier {
   Future<void> verifyMfa(String code) async {
     final pending = pendingMfa;
     final client = _client;
-    if (pending == null || client == null) throw TapoException('Sign in again');
+    if (pending == null || client == null) throw TapoException('Volvé a iniciar sesión');
     final type = pending.requestedType;
-    if (type == null) throw TapoException('Request a verification code first');
+    if (type == null) throw TapoException('Primero pedí un código de verificación');
     code = code.trim();
-    if (code.isEmpty) throw TapoException('Enter the verification code');
+    if (code.isEmpty) throw TapoException('Ingresá el código de verificación');
     final result = await client.verifyMfa(pending.baseUrl, pending.username, code, pending.processId, type);
     await _finishLogin(client, pending.baseUrl, result);
   }
@@ -244,7 +244,7 @@ class AppState extends ChangeNotifier {
   Future<void> _finishLogin(TapoCloud client, String baseUrl, Map<String, dynamic> result) async {
     final token = result['token'];
     if (token == null || '$token'.isEmpty) {
-      throw TapoException('The cloud did not return a session token');
+      throw TapoException('La nube no devolvió una sesión');
     }
     client.token = '$token';
     final devices = await client.listCameras(baseUrl);
@@ -421,7 +421,7 @@ class AppState extends ChangeNotifier {
     final layout = GridLayout.fitting(cameras.length);
     return GridPreset(
       id: GridPreset.allCamerasId,
-      name: 'All cameras',
+      name: 'Todas las cámaras',
       layout: layout,
       slots: [for (final c in cameras.take(layout.slots)) c.deviceId],
     );

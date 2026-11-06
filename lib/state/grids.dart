@@ -3,7 +3,7 @@ import 'dart:ui';
 /// Multi-view layouts. Tiles are rectangles in grid units on a [cols] ×
 /// [rows] canvas, laid out in reading order (slot 1 first).
 enum GridLayout {
-  two('2 side by side', 2, 2, [
+  two('2 lado a lado', 2, 2, [
     Rect.fromLTWH(0, 0.5, 1, 1),
     Rect.fromLTWH(1, 0.5, 1, 1),
   ]),
@@ -81,7 +81,7 @@ class GridPreset {
 
   static GridPreset fromJson(Map<String, dynamic> json) => GridPreset(
         id: '${json['id']}',
-        name: '${json['name'] ?? 'Grid'}',
+        name: '${json['name'] ?? 'Grilla'}',
         layout: GridLayout.byName(json['layout'] as String?),
         slots: [for (final s in (json['slots'] as List? ?? const [])) s?.toString()],
       );

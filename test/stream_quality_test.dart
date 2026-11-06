@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:topo_tv/api/tapo_cloud.dart';
+import 'package:matapo/api/tapo_cloud.dart';
 
 void main() {
   test('HD asks for the main stream', () {

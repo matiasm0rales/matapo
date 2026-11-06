@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
@@ -21,66 +19,60 @@ const _dpad = {_RemoteKey.up, _RemoteKey.down, _RemoteKey.left, _RemoteKey.right
 
 final Map<GuideSection, (String, IconData, List<_Row>)> _sections = {
   GuideSection.basics: (
-    'Basics',
+    'Básico',
     Icons.gamepad_rounded,
     [
       _Row([const KeyCap('', icon: Icons.open_with_rounded, large: true)], 'Move around',
-          'The arrows move the blue outline between items.', _dpad),
-      _Row([const KeyCap('OK', large: true)], 'Select', 'Opens or activates the outlined item.', {_RemoteKey.ok}),
-      _Row([const KeyCap('', icon: Icons.arrow_back_rounded, large: true)], 'Go back',
-          'Closes dialogs and controls first, then returns to the previous screen.', {_RemoteKey.back}),
-      _Row([const KeyCap('', icon: Icons.menu_rounded, large: true)], 'Remote guide',
-          'Menu or Info opens this guide. No such key? Use the Guide button.', {_RemoteKey.menu}),
-      if (Platform.isMacOS)
-        _Row([const KeyCap('Esc', large: true)], 'Keyboard',
-            'Arrows move, Enter is OK (hold for quick actions), Esc goes back, Page Up/Down are CH +/−, '
-                'F1 opens this guide. Clicking works too.',
-            {_RemoteKey.back, _RemoteKey.ok})
-      else
-        _Row([const KeyCap('OK', large: true)], 'Typing',
-            'On a text box press OK to open the TV keyboard, or type from the Google TV phone app.', {_RemoteKey.ok}),
+          'Las flechas mueven el recuadro azul entre los elementos.', _dpad),
+      _Row([const KeyCap('OK', large: true)], 'Elegir', 'Abre o activa el elemento marcado.', {_RemoteKey.ok}),
+      _Row([const KeyCap('', icon: Icons.arrow_back_rounded, large: true)], 'Volver',
+          'Primero cierra los diálogos y controles, y después vuelve a la pantalla anterior.', {_RemoteKey.back}),
+      _Row([const KeyCap('', icon: Icons.menu_rounded, large: true)], 'Guía del control',
+          'Menú o Info abren esta guía. ¿No tenés esas teclas? Usá el botón Guía.', {_RemoteKey.menu}),
+      _Row([const KeyCap('OK', large: true)], 'Escribir',
+          'En un campo de texto presioná OK para abrir el teclado del TV, o escribí desde la app Google TV del teléfono.', {_RemoteKey.ok}),
     ],
   ),
   GuideSection.home: (
-    'Cameras',
+    'Cámaras',
     Icons.videocam_rounded,
     [
-      _Row([const KeyCap('OK', large: true)], 'Watch live', 'Opens the outlined camera full screen.', {_RemoteKey.ok}),
-      _Row([const KeyCap('Hold OK', large: true)], 'Quick actions',
-          'Hold OK on a camera for privacy mode and reconnect.', {_RemoteKey.ok}),
-      _Row([const KeyCap('1 – 9', large: true)], 'Jump to camera', 'Number keys open camera 1 to 9.', {_RemoteKey.digits}),
-      _Row([const KeyCap('', icon: Icons.arrow_upward_rounded, large: true)], 'Top menu',
-          'Move up to switch between Cameras, Multi-view and Settings, then press OK.', {_RemoteKey.up}),
+      _Row([const KeyCap('OK', large: true)], 'Ver en vivo', 'Abre la cámara marcada en pantalla completa.', {_RemoteKey.ok}),
+      _Row([const KeyCap('Mantené OK', large: true)], 'Acciones rápidas',
+          'Mantené OK sobre una cámara para el modo privacidad y reconectar.', {_RemoteKey.ok}),
+      _Row([const KeyCap('1 – 9', large: true)], 'Ir a una cámara', 'Los números abren las cámaras 1 a 9.', {_RemoteKey.digits}),
+      _Row([const KeyCap('', icon: Icons.arrow_upward_rounded, large: true)], 'Menú superior',
+          'Subí para cambiar entre Cámaras, Grillas y Ajustes, y presioná OK.', {_RemoteKey.up}),
     ],
   ),
   GuideSection.multiview: (
-    'Multi-view',
+    'Grillas',
     Icons.grid_view_rounded,
     [
-      _Row([const KeyCap('OK', large: true)], 'Open a grid', 'In Multi-view, OK opens the outlined grid.', {_RemoteKey.ok}),
+      _Row([const KeyCap('OK', large: true)], 'Abrir una grilla', 'En Grillas, OK abre la grilla marcada.', {_RemoteKey.ok}),
       _Row([const KeyCap('CH +', large: true), const SizedBox(width: 6), const KeyCap('CH −', large: true)],
-          'Switch grid', 'While watching a grid, channel keys go to the next or previous saved grid.',
+          'Cambiar de grilla', 'Mientras mirás una grilla, los botones de canal pasan a la grilla siguiente o anterior.',
           {_RemoteKey.chUp, _RemoteKey.chDown}),
-      _Row([const KeyCap('', icon: Icons.arrow_upward_rounded, large: true)], 'Grid bar',
-          'Move up from the top row to pick another grid or edit this one.', {_RemoteKey.up}),
-      _Row([const KeyCap('OK', large: true)], 'Full screen', 'OK on a tile opens that camera full screen.', {_RemoteKey.ok}),
-      _Row([const KeyCap('Hold OK', large: true)], 'Change a tile',
-          'Hold OK on a tile to put another camera in it.', {_RemoteKey.ok}),
+      _Row([const KeyCap('', icon: Icons.arrow_upward_rounded, large: true)], 'Barra de grillas',
+          'Subí desde la fila de arriba para elegir otra grilla o editar esta.', {_RemoteKey.up}),
+      _Row([const KeyCap('OK', large: true)], 'Pantalla completa', 'OK en una celda abre esa cámara en pantalla completa.', {_RemoteKey.ok}),
+      _Row([const KeyCap('Mantené OK', large: true)], 'Cambiar una celda',
+          'Mantené OK en una celda para poner otra cámara.', {_RemoteKey.ok}),
     ],
   ),
   GuideSection.live: (
-    'Live view',
+    'Vista en vivo',
     Icons.live_tv_rounded,
     [
-      _Row([const KeyCap('', icon: Icons.open_with_rounded, large: true)], 'Pan & tilt',
-          'With the controls hidden, arrows move the camera. Hold to keep moving.', _dpad),
-      _Row([const KeyCap('OK', large: true)], 'Show controls',
-          'Privacy, step size, reconnect and previous/next camera.', {_RemoteKey.ok}),
+      _Row([const KeyCap('', icon: Icons.open_with_rounded, large: true)], 'Movimiento',
+          'Con los controles ocultos, las flechas mueven la cámara. Mantené para seguir moviendo.', _dpad),
+      _Row([const KeyCap('OK', large: true)], 'Mostrar controles',
+          'Privacidad, paso, reconectar y cámara anterior o siguiente.', {_RemoteKey.ok}),
       _Row([const KeyCap('CH +', large: true), const SizedBox(width: 6), const KeyCap('CH −', large: true)],
-          'Switch camera', 'Channel keys, previous/next track keys or 1–9. Without pan & tilt, left/right also switch.',
+          'Cambiar de cámara', 'Botones de canal, pista anterior o siguiente, o 1–9. Sin movimiento, izquierda y derecha también cambian.',
           {_RemoteKey.chUp, _RemoteKey.chDown}),
-      _Row([const KeyCap('', icon: Icons.arrow_back_rounded, large: true)], 'Back',
-          'First hides the controls, then returns to where you came from.', {_RemoteKey.back}),
+      _Row([const KeyCap('', icon: Icons.arrow_back_rounded, large: true)], 'Volver',
+          'Primero oculta los controles y después vuelve a donde estabas.', {_RemoteKey.back}),
     ],
   ),
 };
@@ -90,7 +82,7 @@ Future<void> showRemoteGuide(BuildContext context, {GuideSection section = Guide
     PageRouteBuilder<void>(
       opaque: false,
       barrierColor: Colors.black54,
-      transitionDuration: TopoMotion.navigation,
+      transitionDuration: MatapoMotion.navigation,
       pageBuilder: (_, _, _) => RemoteGuide(initial: section),
       transitionsBuilder: (_, animation, _, child) => FadeTransition(opacity: animation, child: child),
     ),
@@ -117,22 +109,22 @@ class _RemoteGuideState extends State<RemoteGuide> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 20),
         child: Container(
-          decoration: BoxDecoration(color: TopoColors.surface, borderRadius: BorderRadius.circular(TopoRadius.xl)),
-          padding: const EdgeInsets.fromLTRB(TopoSpace.x3, TopoSpace.x2, TopoSpace.x3, TopoSpace.x2),
+          decoration: BoxDecoration(color: MatapoColors.surface, borderRadius: BorderRadius.circular(MatapoRadius.xl)),
+          padding: const EdgeInsets.fromLTRB(MatapoSpace.x3, MatapoSpace.x2, MatapoSpace.x3, MatapoSpace.x2),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(width: 170, child: Center(child: _Remote(highlight: _highlight))),
-              const SizedBox(width: TopoSpace.x3),
+              const SizedBox(width: MatapoSpace.x3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Remote control guide', style: TopoText.headline),
-                    const SizedBox(height: TopoSpace.md),
+                    const Text('Guía del control remoto', style: MatapoText.headline),
+                    const SizedBox(height: MatapoSpace.md),
                     Wrap(
-                      spacing: TopoSpace.sm,
-                      runSpacing: TopoSpace.sm,
+                      spacing: MatapoSpace.sm,
+                      runSpacing: MatapoSpace.sm,
                       children: [
                         for (final s in GuideSection.values)
                           TvChip(
@@ -144,7 +136,7 @@ class _RemoteGuideState extends State<RemoteGuide> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: TopoSpace.lg),
+                    const SizedBox(height: MatapoSpace.lg),
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.all(8),
@@ -154,23 +146,18 @@ class _RemoteGuideState extends State<RemoteGuide> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: TopoSpace.md),
+                    const SizedBox(height: MatapoSpace.md),
                     Row(
                       children: [
                         TvButton(
-                          label: 'Got it',
+                          label: 'Entendido',
                           icon: Icons.check_rounded,
                           style: TvButtonStyle.primary,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
-                        const SizedBox(width: TopoSpace.lg),
-                        Expanded(
-                          child: Text(
-                            Platform.isMacOS
-                                ? 'Open this guide any time with F1.'
-                                : 'Open this guide any time with Menu or Info.',
-                            style: TopoText.caption,
-                          ),
+                        const SizedBox(width: MatapoSpace.lg),
+                        const Expanded(
+                          child: Text('Abrí esta guía cuando quieras con Menú o Info.', style: MatapoText.caption),
                         ),
                       ],
                     ),
@@ -193,7 +180,7 @@ class _GuideRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: TopoSpace.md),
+      padding: const EdgeInsets.only(bottom: MatapoSpace.md),
       child: Semantics(
         label: '${row.label}. ${row.detail}',
         child: TvFocusable(
@@ -203,11 +190,11 @@ class _GuideRow extends StatelessWidget {
             focused: focused,
             scale: false,
             child: AnimatedContainer(
-              duration: TopoMotion.focus,
-              padding: const EdgeInsets.symmetric(horizontal: TopoSpace.lg, vertical: TopoSpace.md),
+              duration: MatapoMotion.focus,
+              padding: const EdgeInsets.symmetric(horizontal: MatapoSpace.lg, vertical: MatapoSpace.md),
               decoration: BoxDecoration(
-                color: focused ? TopoColors.surfaceSelected : TopoColors.neutral,
-                borderRadius: BorderRadius.circular(TopoRadius.lg),
+                color: focused ? MatapoColors.surfaceSelected : MatapoColors.neutral,
+                borderRadius: BorderRadius.circular(MatapoRadius.lg),
               ),
               child: Row(
                 children: [
@@ -216,8 +203,8 @@ class _GuideRow extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(row.label, style: TopoText.label),
-                        Text(row.detail, style: TopoText.caption),
+                        Text(row.label, style: MatapoText.label),
+                        Text(row.detail, style: MatapoText.caption),
                       ],
                     ),
                   ),
@@ -237,11 +224,11 @@ class _Remote extends StatelessWidget {
   final Set<_RemoteKey> highlight;
 
   bool _on(_RemoteKey k) => highlight.contains(k);
-  Color _bg(_RemoteKey k) => _on(k) ? TopoColors.primaryAction : TopoColors.surfaceSelected;
-  Color _fg(_RemoteKey k) => _on(k) ? TopoColors.onPrimary : TopoColors.primaryPressed;
+  Color _bg(_RemoteKey k) => _on(k) ? MatapoColors.primaryAction : MatapoColors.surfaceSelected;
+  Color _fg(_RemoteKey k) => _on(k) ? MatapoColors.onPrimary : MatapoColors.primaryPressed;
 
   Widget _round(_RemoteKey k, IconData icon) => AnimatedContainer(
-        duration: TopoMotion.focus,
+        duration: MatapoMotion.focus,
         width: 36,
         height: 36,
         decoration: BoxDecoration(color: _bg(k), shape: BoxShape.circle),
@@ -249,21 +236,21 @@ class _Remote extends StatelessWidget {
       );
 
   Widget _arrow(_RemoteKey k, IconData icon) => AnimatedContainer(
-        duration: TopoMotion.focus,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: _on(k) ? TopoColors.primaryAction : Colors.transparent),
+        duration: MatapoMotion.focus,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: _on(k) ? MatapoColors.primaryAction : Colors.transparent),
         child: Icon(icon, size: 22, color: _fg(k)),
       );
 
   Widget _rocker(String label, _RemoteKey? up, _RemoteKey? down) {
     final on = (up != null && _on(up)) || (down != null && _on(down));
-    final fg = on ? TopoColors.onPrimary : TopoColors.primaryPressed;
+    final fg = on ? MatapoColors.onPrimary : MatapoColors.primaryPressed;
     return AnimatedContainer(
-      duration: TopoMotion.focus,
+      duration: MatapoMotion.focus,
       width: 36,
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: on ? TopoColors.primaryAction : TopoColors.surfaceSelected,
-        borderRadius: BorderRadius.circular(TopoRadius.full),
+        color: on ? MatapoColors.primaryAction : MatapoColors.surfaceSelected,
+        borderRadius: BorderRadius.circular(MatapoRadius.full),
       ),
       child: Column(
         children: [
@@ -289,12 +276,12 @@ class _Remote extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 8, height: 8, decoration: const BoxDecoration(color: TopoColors.primary, shape: BoxShape.circle)),
+            Container(width: 8, height: 8, decoration: const BoxDecoration(color: MatapoColors.primary, shape: BoxShape.circle)),
             const SizedBox(height: 14),
             Container(
               width: 98,
               height: 98,
-              decoration: const BoxDecoration(color: TopoColors.surface, shape: BoxShape.circle, boxShadow: cardShadow),
+              decoration: const BoxDecoration(color: MatapoColors.surface, shape: BoxShape.circle, boxShadow: cardShadow),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -303,7 +290,7 @@ class _Remote extends StatelessWidget {
                   Positioned(left: 2, child: _arrow(_RemoteKey.left, Icons.keyboard_arrow_left_rounded)),
                   Positioned(right: 2, child: _arrow(_RemoteKey.right, Icons.keyboard_arrow_right_rounded)),
                   AnimatedContainer(
-                    duration: TopoMotion.focus,
+                    duration: MatapoMotion.focus,
                     width: 44,
                     height: 44,
                     alignment: Alignment.center,
@@ -329,9 +316,9 @@ class _Remote extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             AnimatedContainer(
-              duration: TopoMotion.focus,
+              duration: MatapoMotion.focus,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: _bg(_RemoteKey.digits), borderRadius: BorderRadius.circular(TopoRadius.sm)),
+              decoration: BoxDecoration(color: _bg(_RemoteKey.digits), borderRadius: BorderRadius.circular(MatapoRadius.sm)),
               child: Text('1 2 3 …', style: TextStyle(color: _fg(_RemoteKey.digits), fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ],
