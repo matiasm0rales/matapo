@@ -1,68 +1,17 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show PlatformViewHitTestBehavior;
-import 'package:flutter/services.dart';
 
 import '../api/tapo_cloud.dart' show StreamQuality;
 import '../state/app_state.dart';
 import '../ui/theme.dart';
 import '../ui/tv.dart' show KeyCap;
+import 'android_video.dart';
+import 'mpv_video.dart';
 import 'stream_queue.dart';
 
 enum LiveState { connecting, playing, retrying, failed }
-
-/// Routes native player events (see LivePlayer.kt) to their view.
-class _PlayerEvents {
-  _PlayerEvents._() {
-    const MethodChannel('topo/player').setMethodCallHandler((call) async {
-      if (call.method != 'event') return;
-      final args = Map<String, dynamic>.from(call.arguments as Map);
-      _listeners[(args['id'] as num).toInt()]?.call(args);
-    });
-  }
-  static final instance = _PlayerEvents._();
-  final _listeners = <int, void Function(Map<String, dynamic>)>{};
-}
-
-/// The native ExoPlayer view, embedded with hybrid composition. One view is
-/// one stream session: a new key means a new connection.
-class _NativeVideo extends StatelessWidget {
-  const _NativeVideo({super.key, required this.url, required this.snapshotPath, required this.onEvent});
-  final String url;
-  final String? snapshotPath;
-  final void Function(Map<String, dynamic>) onEvent;
-
-  static const _viewType = 'topo/live-video';
-
-  @override
-  Widget build(BuildContext context) {
-    // The native view never takes focus; keep it out of D-pad traversal.
-    return ExcludeFocus(
-      child: PlatformViewLink(
-        viewType: _viewType,
-        surfaceFactory: (context, controller) => AndroidViewSurface(
-          controller: controller as AndroidViewController,
-          gestureRecognizers: const {},
-          hitTestBehavior: PlatformViewHitTestBehavior.transparent,
-        ),
-        onCreatePlatformView: (params) {
-          _PlayerEvents.instance._listeners[params.id] = onEvent;
-          final controller = PlatformViewsService.initExpensiveAndroidView(
-            id: params.id,
-            viewType: _viewType,
-            layoutDirection: TextDirection.ltr,
-            creationParams: {'url': url, 'snapshot': snapshotPath},
-            creationParamsCodec: const StandardMessageCodec(),
-          )
-            ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
-            ..create();
-          return controller;
-        },
-      ),
-    );
-  }
-}
 
 /// Live camera video with connection state, auto-retry and error display.
 class LiveVideo extends StatefulWidget {
@@ -267,21 +216,27 @@ class LiveVideoState extends State<LiveVideo> {
             Center(
               child: AspectRatio(
                 aspectRatio: _aspect,
-                child: _NativeVideo(
-                  key: ValueKey(session),
-                  url: widget.app.streamUrl(
-                    widget.camera,
-                    quality: widget.compact ? StreamQuality.low : StreamQuality.hd,
-                  ),
-                  snapshotPath: Snapshots.instance.pathFor(widget.camera.deviceId),
-                  onEvent: _onEvent,
-                ),
+                child: _surface(session),
               ),
             ),
           if (_state != LiveState.playing) _overlay(context),
         ],
       ),
     );
+  }
+
+  /// The platform video view for one stream session; both report the same
+  /// events (firstFrame, size, snapshot, error) to [_onEvent].
+  Widget _surface(int session) {
+    final url = widget.app.streamUrl(
+      widget.camera,
+      quality: widget.compact ? StreamQuality.low : StreamQuality.hd,
+    );
+    final snapshotPath = Snapshots.instance.pathFor(widget.camera.deviceId);
+    if (Platform.isMacOS) {
+      return MpvVideo(key: ValueKey(session), url: url, snapshotPath: snapshotPath, onEvent: _onEvent);
+    }
+    return AndroidVideo(key: ValueKey(session), url: url, snapshotPath: snapshotPath, onEvent: _onEvent);
   }
 
   Widget _overlay(BuildContext context) {

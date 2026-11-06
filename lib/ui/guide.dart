@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
@@ -29,8 +31,14 @@ final Map<GuideSection, (String, IconData, List<_Row>)> _sections = {
           'Closes dialogs and controls first, then returns to the previous screen.', {_RemoteKey.back}),
       _Row([const KeyCap('', icon: Icons.menu_rounded, large: true)], 'Remote guide',
           'Menu or Info opens this guide. No such key? Use the Guide button.', {_RemoteKey.menu}),
-      _Row([const KeyCap('OK', large: true)], 'Typing',
-          'On a text box press OK to open the TV keyboard, or type from the Google TV phone app.', {_RemoteKey.ok}),
+      if (Platform.isMacOS)
+        _Row([const KeyCap('Esc', large: true)], 'Keyboard',
+            'Arrows move, Enter is OK (hold for quick actions), Esc goes back, Page Up/Down are CH +/−, '
+                'F1 opens this guide. Clicking works too.',
+            {_RemoteKey.back, _RemoteKey.ok})
+      else
+        _Row([const KeyCap('OK', large: true)], 'Typing',
+            'On a text box press OK to open the TV keyboard, or type from the Google TV phone app.', {_RemoteKey.ok}),
     ],
   ),
   GuideSection.home: (
@@ -156,8 +164,13 @@ class _RemoteGuideState extends State<RemoteGuide> {
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         const SizedBox(width: TopoSpace.lg),
-                        const Expanded(
-                          child: Text('Open this guide any time with Menu or Info.', style: TopoText.caption),
+                        Expanded(
+                          child: Text(
+                            Platform.isMacOS
+                                ? 'Open this guide any time with F1.'
+                                : 'Open this guide any time with Menu or Info.',
+                            style: TopoText.caption,
+                          ),
                         ),
                       ],
                     ),

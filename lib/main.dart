@@ -1,5 +1,8 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -10,6 +13,8 @@ import 'ui/tv.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Live video on macOS uses libmpv (lib/player/mpv_video.dart).
+  if (Platform.isMacOS) MediaKit.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   final app = AppState()..init();
   runApp(TopoTvApp(app: app));
@@ -43,9 +48,15 @@ class _TopoTvAppState extends State<TopoTvApp> {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(
-      onStateChange: (state) => widget.app.setForeground(state == AppLifecycleState.resumed),
+      onStateChange: (state) => widget.app.setForeground(_showsVideo(state)),
     );
   }
+
+  /// Whether streams should run. On a Mac the window stays on screen while
+  /// the user works in another app ("inactive"), so cameras keep playing
+  /// as on a monitor; only Android TV stops them when the app leaves.
+  static bool _showsVideo(AppLifecycleState state) =>
+      state == AppLifecycleState.resumed || (Platform.isMacOS && state == AppLifecycleState.inactive);
 
   @override
   void dispose() {
@@ -54,6 +65,12 @@ class _TopoTvAppState extends State<TopoTvApp> {
   }
 
   KeyEventResult _globalKeys(FocusNode node, KeyEvent event) {
+    // A Mac keyboard has no Back key: Escape does the same, so PopScope on
+    // each screen still decides (hide controls first, then leave).
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      navigatorKey.currentState?.maybePop();
+      return KeyEventResult.handled;
+    }
     if (event is! KeyDownEvent || !guideKeys.contains(event.logicalKey)) return KeyEventResult.ignored;
     final context = navigatorKey.currentContext;
     if (context == null || _guideOpen) return KeyEventResult.handled;

@@ -38,6 +38,8 @@
 > - Si el relay de Tapo se corta, el video ya no queda congelado: el
 >   reproductor reconecta solo, y una imagen que pasa 10 segundos sin
 >   cambiar también se reconecta.
+> - Versión para macOS: la misma app corre en una Mac, con el teclado en
+>   lugar del control remoto (ver [macOS](#macos)).
 
 Topo TV brings your Tapo cameras to the living room TV. Sign in with your Tapo
 account and you get live previews of every camera, multi-camera grids, pan and
@@ -207,6 +209,53 @@ adb install -r build/app/outputs/flutter-apk/app-release.apk
 On emulators the player uses the software H.264 decoder, because the
 emulator's hardware decoder stalls on live streams. Real TVs use hardware
 decoding.
+
+### macOS
+
+The same app runs on a Mac (Apple Silicon or Intel, macOS 12 or later).
+Live video there uses libmpv through [media_kit](https://pub.dev/packages/media_kit)
+instead of ExoPlayer; everything else is shared with the Android TV app.
+
+Requirements: Xcode (from the App Store) with its command line tools
+selected, CocoaPods and fvm with Flutter **3.47.2**.
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+```bash
+brew install cocoapods fvm
+```
+
+Run it from source:
+
+```bash
+fvm flutter run -d macos
+```
+
+Or build the app, written to `build/macos/Build/Products/Release/Topo TV.app`:
+
+```bash
+fvm flutter build macos --release
+```
+
+The UI test mode below works on the Mac too
+(`fvm flutter run -d macos --dart-define=TOPO_DEMO=true`).
+
+On the Mac the keyboard replaces the remote:
+
+| Remote | Keyboard |
+| --- | --- |
+| D-pad | Arrow keys |
+| OK (hold for quick actions) | Enter or Space (hold) |
+| Back | Esc |
+| CH + / CH − | Page Up / Page Down (fn + ↑ / ↓) |
+| 1 – 9 | 1 – 9 |
+| Menu / Info | F1 |
+
+Clicking also works. Use the window's green button or ⌃⌘F for full
+screen. While any video is on screen the Mac doesn't sleep or start the
+screensaver.
 
 ### UI test mode
 
